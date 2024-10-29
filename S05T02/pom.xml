@@ -109,6 +109,12 @@
 			<artifactId>mockito-junit-jupiter</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>io.wcm.maven.plugins</groupId>
+			<artifactId>nodejs-maven-plugin</artifactId>
+			<version>3.0.8</version>
+		</dependency>
+
 	</dependencies>
 
 	<build>

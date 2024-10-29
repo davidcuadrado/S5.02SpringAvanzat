@@ -23,7 +23,7 @@ public class ContentController {
 	@Operation(summary = "Admin home page", description = "Home page for logged in admins. ")
 	@GetMapping("/admin/home")
 	public String handleAdminWelcome() {
-		return "You are now logged in, welcome!";
+		return "You are now logged in as admin, welcome!";
 	}
 	
 
