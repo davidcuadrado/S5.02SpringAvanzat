@@ -26,6 +26,9 @@ public class User {
 	@Getter
 	@Setter
 	private ArrayList<String> petId;
+	@Getter
+	@Setter
+	private String role;
 
 	public User(String username, String password) {
 		this.username = username;

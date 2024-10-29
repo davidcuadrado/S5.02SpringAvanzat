@@ -22,6 +22,11 @@ public class GlobalExceptionHandler {
 	    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
 	}
 	
+	@ExceptionHandler(UsernameNotFoundException.class)
+	public ResponseEntity<String> handleUsernameNotFoundException(UsernameNotFoundException e) {
+	    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+	}
+	
 	@ExceptionHandler(BadRequestException.class)
 	public ResponseEntity<String> handleBadRequestException(BadRequestException e) {
 	    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
