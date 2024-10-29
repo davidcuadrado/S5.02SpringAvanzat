@@ -5,11 +5,11 @@ import java.util.Optional;
 import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
 import org.springframework.stereotype.Repository;
 
-import cat.itacademy.s05.t02.models.User;
+import cat.itacademy.s05.t02.models.MyUser;
 
 @Repository
-public interface UserRepository extends ReactiveMongoRepository<User, String>{
+public interface UserRepository extends ReactiveMongoRepository<MyUser, String>{
 
-	Optional<User> findByUsername(String username);
+	Optional<MyUser> findByUsername(String username);
 
 }
