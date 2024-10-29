@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository;
 import cat.itacademy.s05.t02.models.MyUser;
 
 @Repository
-public interface UserRepository extends ReactiveMongoRepository<MyUser, String>{
+public interface MyUserRepository extends ReactiveMongoRepository<MyUser, String>{
 
 	Optional<MyUser> findByUsername(String username);
 

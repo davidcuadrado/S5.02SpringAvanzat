@@ -8,14 +8,14 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import cat.itacademy.s05.t02.models.MyUser;
-import cat.itacademy.s05.t02.repositories.UserRepository;
+import cat.itacademy.s05.t02.repositories.MyUserRepository;
 import io.swagger.v3.oas.annotations.Operation;
 
 @RestController
 public class RegistrationController {
 	
 	@Autowired
-	private UserRepository userRepository;
+	private MyUserRepository userRepository;
 	@Autowired
 	private PasswordEncoder passwordEncoder;
 	

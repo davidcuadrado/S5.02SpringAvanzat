@@ -17,14 +17,14 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
-import cat.itacademy.s05.t02.services.UserDetailService;
+import cat.itacademy.s05.t02.services.MyUserDetailService;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfiguration {
 	
 	@Autowired
-	private UserDetailService userDetailService;
+	private MyUserDetailService userDetailService;
 
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
@@ -40,6 +40,7 @@ public class SecurityConfiguration {
 				.build();
 	}
 	
+	/*
 	@Bean
 	public UserDetailsService userDetailsService() {
 		UserDetails normalUser = User.builder()
@@ -55,11 +56,18 @@ public class SecurityConfiguration {
 				.build();
 		return new InMemoryUserDetailsManager(normalUser, adminUser);
 	}
+	*/
+	
+	@Bean
+	public UserDetailsService userDetailsService() {
+		return userDetailService;
+		
+	}
 	
 	@Bean
 	public AuthenticationProvider authenticationProvider() {
 		DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-		provider.setUserDetailService(userDetailService);
+		provider.setUserDetailsService(userDetailService);
 		provider.setPasswordEncoder(passwordEncoder());
 		return provider;
 	}

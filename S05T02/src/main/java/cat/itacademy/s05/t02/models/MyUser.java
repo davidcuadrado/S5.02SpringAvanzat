@@ -16,23 +16,30 @@ import lombok.Setter;
 public class MyUser {
 
 	@Id
-	private String userId;
-	@Getter
-	@Setter
-	private String username;
-	@Getter
-	@Setter
-	private String password;
-	@Getter
-	@Setter
-	private ArrayList<Pet> petList;
-	@Getter
-	@Setter
-	private String role;
+	private @Setter @Getter String userId;
+	private @Setter @Getter String username;
+	private @Setter @Getter String password;
+	private @Setter @Getter String role;
+	private @Setter @Getter ArrayList<Pet> petList;
+
 
 	public MyUser(String username, String password) {
 		this.username = username;
 		this.password = password;
 	}
+	
+	public String getUsername() {
+		return username;
+	}
+
+	public String getPassword() {
+		return password;
+	}
+
+	public String getRole() {
+		return this.role;
+	}
+
+	
 
 }
