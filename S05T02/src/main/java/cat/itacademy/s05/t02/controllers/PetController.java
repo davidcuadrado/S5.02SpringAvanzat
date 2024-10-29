@@ -17,14 +17,12 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import reactor.core.publisher.Mono;
 
+@Tag(name = "Pet", description = "the Pet API")
+@RestController
+@RequestMapping("/pet")
+public class PetController {
 
-	
-	@Tag(name = "Pet", description = "the Pet API")
-	@RestController
-	@RequestMapping("/pet")
-	public class PetController {
-
-		@Autowired
-		private PetService playerService;
+	@Autowired
+	private PetService playerService;
 
 }
