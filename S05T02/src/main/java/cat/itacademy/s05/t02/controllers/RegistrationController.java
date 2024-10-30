@@ -1,7 +1,7 @@
 package cat.itacademy.s05.t02.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.security.SecurityProperties.User;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -19,12 +19,18 @@ public class RegistrationController {
 	private MyUserRepository myUserRepository;
 	@Autowired
 	private PasswordEncoder passwordEncoder;
-	
+
+
 	@Operation(summary = "User registration", description = "Endpoint for user registration")
 	@PostMapping("/register/user")
-	public Mono<MyUser> createUser(@RequestBody MyUser user) {
-		user.setPassword(passwordEncoder.encode(user.getPassword()));
-		return myUserRepository.save(user);
+	public Mono<ResponseEntity<MyUser>> createUser(@RequestBody MyUser user) {
+		return Mono.just(user)
+			.map(userModify -> {
+				userModify.setPassword(passwordEncoder.encode(userModify.getPassword()));
+				return userModify;
+			})
+			.flatMap(myUserRepository::save)
+			.map(savedUser -> ResponseEntity.ok(savedUser))
+			.defaultIfEmpty(ResponseEntity.badRequest().build());
 	}
-	
 }

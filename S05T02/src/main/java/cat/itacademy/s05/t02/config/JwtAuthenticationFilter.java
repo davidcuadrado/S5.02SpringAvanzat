@@ -7,6 +7,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.security.*;
 
 import cat.itacademy.s05.t02.services.JwtService;
 import cat.itacademy.s05.t02.services.MyUserDetailService;
