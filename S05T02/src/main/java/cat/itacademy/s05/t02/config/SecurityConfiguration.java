@@ -10,6 +10,7 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.core.userdetails.ReactiveUserDetailsService;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -28,36 +29,20 @@ public class SecurityConfiguration {
 	private JwtAuthenticationFilter jwtAuthenticationFilter;
 
 	@Bean
-	 SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
-		return httpSecurity
-				.csrf(AbstractHttpConfigurer::disable).authorizeHttpRequests(registry -> {
+	SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
+		return httpSecurity.csrf(AbstractHttpConfigurer::disable).authorizeHttpRequests(registry -> {
 			registry.requestMatchers("/home", "/register/**", "/authenticate/**").permitAll();
 			registry.requestMatchers("/user/**").hasRole("USER");
 			registry.requestMatchers("/admin/**").hasRole("ADMIN");
 			registry.anyRequest().authenticated();
-		})
-		.formLogin(httpSecurityFormLoginConfigurer -> {
+		}).formLogin(httpSecurityFormLoginConfigurer -> {
 			httpSecurityFormLoginConfigurer.loginPage("/login").successHandler(new AuthenticationSuccessHandler())
 					.permitAll();
-		})
-		.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-		.build();
+		}).addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class).build();
 	}
 
-	/*
-	 * @Bean public UserDetailsService userDetailsService() { UserDetails normalUser
-	 * = User.builder() .username("gc")
-	 * .password("$2a$12$UdcMou5SwvTU/piIRZUmouOVHS4/XMj5P9w.z0usghO7tAHSi/ti.")
-	 * .roles("USER") .build();
-	 * 
-	 * UserDetails adminUser = User.builder() .username("admin")
-	 * .password("$2a$12$IvHXCjz29drPRmdis7lEmegmEoBebkaiGrVvQTePcPwQi5IQki7wy")
-	 * .roles("ADMIN", "USER") .build(); return new
-	 * InMemoryUserDetailsManager(normalUser, adminUser); }
-	 */
-
 	@Bean
-	public UserDetailsService userDetailsService() {
+	public ReactiveUserDetailsService userDetailsService() {
 		return userDetailService;
 
 	}

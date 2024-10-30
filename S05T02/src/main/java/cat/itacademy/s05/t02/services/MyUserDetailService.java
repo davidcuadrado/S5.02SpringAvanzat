@@ -18,7 +18,7 @@ public class MyUserDetailService implements ReactiveUserDetailsService {
 	private MyUserRepository userRepository;
 
 	@Override
-	public Mono<UserDetails> findByUsername(String username) {
+	public Mono<UserDetails> findByUsername(String username) throws UsernameNotFoundException {
 		return userRepository.findByUsername(username)
 			.map(user -> User.builder()
 					.username(user.getUsername())
