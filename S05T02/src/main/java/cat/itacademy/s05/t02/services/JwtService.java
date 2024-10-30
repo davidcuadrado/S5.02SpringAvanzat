@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import reactor.core.publisher.Mono;
 
 @Service
 public class JwtService {
@@ -22,31 +23,41 @@ public class JwtService {
 	private static final String SECRET = "E0D1A0FDE7DECE0CF1FB3212E468DCCAA9B8707334E6CD50F0DEB47FE679FFF3";
 	private static final long VALIDITY = TimeUnit.MINUTES.toMillis(30);
 
-	public String generateToken(UserDetails userDetails) {
-		Map<String, String> claims = new HashMap<>();
-		claims.put("iss", "ITAcademyS05T02");
-		return Jwts.builder().claims(claims).subject(userDetails.getUsername()).issuedAt(Date.from(Instant.now()))
-				.expiration(Date.from(Instant.now().plusMillis(VALIDITY))).signWith(generateKey()).compact();
+	public Mono<String> generateToken(Mono<UserDetails> userDetailsMono) {
+	    return userDetailsMono.flatMap(userDetails -> {
+	        return Mono.fromCallable(() -> {
+	            Map<String, Object> claims = new HashMap<>();
+	            claims.put("iss", "ITAcademyS05T02");
 
+	            return Jwts.builder()
+	                .claims(claims)
+	                .subject(userDetails.getUsername())
+	                .issuedAt(Date.from(Instant.now()))
+	                .expiration(Date.from(Instant.now().plusMillis(VALIDITY)))
+	                .signWith(generateKey())
+	                .compact();
+	        });
+	    });
 	}
+
 
 	private SecretKey generateKey() {
 		byte[] decodedKey = Base64.getDecoder().decode(SECRET);
 		return Keys.hmacShaKeyFor(decodedKey);
 	}
 
-	public String extractUsername(String jwt) {
-		Claims claims = getClaims(jwt);
-		return claims.getSubject();
+	public Mono<String> extractUsername(String jwt) {
+		return Mono.fromCallable(() -> getClaims(jwt).getSubject());
 	}
 
 	private Claims getClaims(String jwt) {
 		return Jwts.parser().verifyWith(generateKey()).build().parseSignedClaims(jwt).getPayload();
 	}
 
-	public boolean isTokenValid(String jwt) {
-		Claims claims = getClaims(jwt);
-		return claims.getExpiration().after(Date.from(Instant.now()));
+	public Mono<Boolean> isTokenValid(String jwt) {
+		return Mono.fromCallable(() -> {
+			Claims claims = getClaims(jwt);
+			return claims.getExpiration().after(Date.from(Instant.now()));
+		});
 	}
-
 }
