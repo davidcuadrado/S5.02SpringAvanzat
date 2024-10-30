@@ -3,12 +3,9 @@ package cat.itacademy.s05.t02.config;
 import java.io.IOException;
 
 import org.springframework.security.core.Authentication;
-import org.springframework.security.web.authentication.HttpServletRequest;
-import org.springframework.security.web.authentication.HttpServletResponse;
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
-import org.springframework.security.web.authentication.ServletException;
 
-public class AuthenticationSuccesHandler extends SavedRequestAwareAuthenticationSuccessHandler {
+public class AuthenticationSuccessHandler extends SavedRequestAwareAuthenticationSuccessHandler {
 	
 	@Override
 	public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
@@ -22,5 +19,4 @@ public class AuthenticationSuccesHandler extends SavedRequestAwareAuthentication
 		
 		super.onAuthenticationSuccess(request, response, authentication);
 	}
-	
 }

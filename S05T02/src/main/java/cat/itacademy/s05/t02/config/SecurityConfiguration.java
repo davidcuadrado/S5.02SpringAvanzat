@@ -7,14 +7,10 @@ import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractAuthenticationFilterConfigurer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
 import cat.itacademy.s05.t02.services.MyUserDetailService;
@@ -34,7 +30,7 @@ public class SecurityConfiguration {
 			registry.requestMatchers("/admin/**").hasRole("ADMIN");
 			registry.anyRequest().authenticated();
 		}).formLogin(httpSecurityFormLoginConfigurer -> {
-			httpSecurityFormLoginConfigurer.loginPage("/login").succesHandler(new AuthenticationSuccessHandler()).permitAll();
+			httpSecurityFormLoginConfigurer.loginPage("/login").successHandler(new AuthenticationSuccessHandler()).permitAll();
 		}).build();
 	}
 
