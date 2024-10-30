@@ -22,17 +22,12 @@ public class JwtService {
 	private static final String SECRET = "E0D1A0FDE7DECE0CF1FB3212E468DCCAA9B8707334E6CD50F0DEB47FE679FFF3";
 	private static final long VALIDITY = TimeUnit.MINUTES.toMillis(30);
 
-	public String generateToken(UserDetails userDetails){
+	public String generateToken(UserDetails userDetails) {
 		Map<String, String> claims = new HashMap<>();
 		claims.put("iss", "ITAcademyS05T02");
-		return Jwts.builder()
-				.claims(claims)
-				.subject(userDetails.getUsername())
-				.issuedAt(Date.from(Instant.now()))
-				.expiration(Date.from(Instant.now().plusMillis(VALIDITY)))
-				.signWith(generateKey())
-				.compact();
-		
+		return Jwts.builder().claims(claims).subject(userDetails.getUsername()).issuedAt(Date.from(Instant.now()))
+				.expiration(Date.from(Instant.now().plusMillis(VALIDITY))).signWith(generateKey()).compact();
+
 	}
 
 	private SecretKey generateKey() {
@@ -41,12 +36,17 @@ public class JwtService {
 	}
 
 	public String extractUsername(String jwt) {
-		Claims claims = Jwts.parser()
-			.verifyWith(generateKey())
-			.build()
-			.parseSignedClaims(jwt)
-			.getPayload();
+		Claims claims = getClaims(jwt);
 		return claims.getSubject();
+	}
+
+	private Claims getClaims(String jwt) {
+		return Jwts.parser().verifyWith(generateKey()).build().parseSignedClaims(jwt).getPayload();
+	}
+
+	public boolean isTokenValid(String jwt) {
+		Claims claims = getClaims(jwt);
+		return claims.getExpiration().after(Date.from(Instant.now()));
 	}
 
 }

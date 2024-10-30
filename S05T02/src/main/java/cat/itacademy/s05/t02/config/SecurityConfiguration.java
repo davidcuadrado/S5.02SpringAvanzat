@@ -14,6 +14,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import cat.itacademy.s05.t02.services.MyUserDetailService;
 
@@ -23,17 +24,24 @@ public class SecurityConfiguration {
 
 	@Autowired
 	private MyUserDetailService userDetailService;
+	@Autowired
+	private JwtAuthenticationFilter jwtAuthenticationFilter;
 
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
-		return httpSecurity.csrf(AbstractHttpConfigurer::disable).authorizeHttpRequests(registry -> {
+		return httpSecurity
+				.csrf(AbstractHttpConfigurer::disable).authorizeHttpRequests(registry -> {
 			registry.requestMatchers("/home", "/register/**", "/authenticate/**").permitAll();
 			registry.requestMatchers("/user/**").hasRole("USER");
 			registry.requestMatchers("/admin/**").hasRole("ADMIN");
 			registry.anyRequest().authenticated();
-		}).formLogin(httpSecurityFormLoginConfigurer -> {
-			httpSecurityFormLoginConfigurer.loginPage("/login").successHandler(new AuthenticationSuccessHandler()).permitAll();
-		}).build();
+		})
+		.formLogin(httpSecurityFormLoginConfigurer -> {
+			httpSecurityFormLoginConfigurer.loginPage("/login").successHandler(new AuthenticationSuccessHandler())
+					.permitAll();
+		})
+		.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+		.build();
 	}
 
 	/*
@@ -61,7 +69,7 @@ public class SecurityConfiguration {
 		provider.setPasswordEncoder(passwordEncoder());
 		return provider;
 	}
-	
+
 	@Bean
 	public AuthenticationManager authenticationManager() {
 		return new ProviderManager(authenticationProvider());
