@@ -22,48 +22,40 @@ import cat.itacademy.s05.t02.services.MyUserDetailService;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfiguration {
-	
+
 	@Autowired
 	private MyUserDetailService userDetailService;
 
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
-		return httpSecurity
-				.csrf(AbstractHttpConfigurer::disable)
-				.authorizeHttpRequests(registry -> {
-					registry.requestMatchers("/home", "/register/**").permitAll();
-					registry.requestMatchers("/user/**").hasRole("USER");
-					registry.requestMatchers("/admin/**").hasRole("ADMIN");
-					registry.anyRequest().authenticated();
-				})
-				.formLogin(AbstractAuthenticationFilterConfigurer::permitAll)
-				.build();
+		return httpSecurity.csrf(AbstractHttpConfigurer::disable).authorizeHttpRequests(registry -> {
+			registry.requestMatchers("/home", "/register/**").permitAll();
+			registry.requestMatchers("/user/**").hasRole("USER");
+			registry.requestMatchers("/admin/**").hasRole("ADMIN");
+			registry.anyRequest().authenticated();
+		}).formLogin(httpSecurityFormLoginConfigurer -> {
+			httpSecurityFormLoginConfigurer.loginPage("/login").succesHandler(new AuthenticationSuccessHandler()).permitAll();
+		}).build();
 	}
-	
+
 	/*
-	@Bean
-	public UserDetailsService userDetailsService() {
-		UserDetails normalUser = User.builder()
-				.username("gc")
-				.password("$2a$12$UdcMou5SwvTU/piIRZUmouOVHS4/XMj5P9w.z0usghO7tAHSi/ti.")
-				.roles("USER")
-				.build();
-		
-		UserDetails adminUser = User.builder()
-				.username("admin")
-				.password("$2a$12$IvHXCjz29drPRmdis7lEmegmEoBebkaiGrVvQTePcPwQi5IQki7wy")
-				.roles("ADMIN", "USER")
-				.build();
-		return new InMemoryUserDetailsManager(normalUser, adminUser);
-	}
-	*/
-	
+	 * @Bean public UserDetailsService userDetailsService() { UserDetails normalUser
+	 * = User.builder() .username("gc")
+	 * .password("$2a$12$UdcMou5SwvTU/piIRZUmouOVHS4/XMj5P9w.z0usghO7tAHSi/ti.")
+	 * .roles("USER") .build();
+	 * 
+	 * UserDetails adminUser = User.builder() .username("admin")
+	 * .password("$2a$12$IvHXCjz29drPRmdis7lEmegmEoBebkaiGrVvQTePcPwQi5IQki7wy")
+	 * .roles("ADMIN", "USER") .build(); return new
+	 * InMemoryUserDetailsManager(normalUser, adminUser); }
+	 */
+
 	@Bean
 	public UserDetailsService userDetailsService() {
 		return userDetailService;
-		
+
 	}
-	
+
 	@Bean
 	public AuthenticationProvider authenticationProvider() {
 		DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
@@ -71,10 +63,10 @@ public class SecurityConfiguration {
 		provider.setPasswordEncoder(passwordEncoder());
 		return provider;
 	}
-	
+
 	@Bean
 	public PasswordEncoder passwordEncoder() {
 		return new BCryptPasswordEncoder();
 	}
-	
+
 }

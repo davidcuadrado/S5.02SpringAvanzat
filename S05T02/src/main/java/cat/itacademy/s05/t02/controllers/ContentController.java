@@ -26,5 +26,11 @@ public class ContentController {
 		return "You are now logged in as admin, welcome!";
 	}
 	
+	@Operation(summary = "Login page", description = "Login page for all users ")
+	@GetMapping("/login")
+	public String handleLogin() {
+		return "custom_login";
+	}
+	
 
 }

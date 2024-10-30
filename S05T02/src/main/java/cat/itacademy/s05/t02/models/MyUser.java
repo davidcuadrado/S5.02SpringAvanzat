@@ -40,6 +40,11 @@ public class MyUser {
 		return this.role;
 	}
 
+	public void setPassword(String password) {
+		this.password = password;
+		
+	}
+
 	
 
 }
