@@ -35,22 +35,19 @@ public class JwtAuthenticationFilter implements WebFilter {
 		}
 
 		String jwt = authHeader.substring(7);
-		return Mono.justOrEmpty(jwtService.extractUsername(jwt))
-				.flatMap(username -> {
-					if (username == null) {
-						return chain.filter(exchange);
-					}
-					return myUserDetailService.findByUsername(username)
-							.flatMap(userDetails -> 
-							Mono.just(jwtService.isTokenValid(jwt))
-							.filter(valid -> valid).flatMap(valid -> {
-								UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-										userDetails.getUsername(), null, userDetails.getAuthorities());
-								
-								SecurityContext securityContext = new SecurityContextImpl(authToken);
-								return ReactiveSecurityContextHolder.withSecurityContext(Mono.just(securityContext));
-							})).then(chain.filter(exchange));
-				});
+		return jwtService.extractUsername(jwt).flatMap(username -> {
+			if (username == null) {
+				return chain.filter(exchange);
+			}
+			return myUserDetailService.findByUsername(username).flatMap(userDetails -> Mono
+					.just(jwtService.isTokenValid(jwt, userDetails)).filter(valid -> valid).flatMap(valid -> {
+						UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+								userDetails.getUsername(), null, userDetails.getAuthorities());
+
+						SecurityContext securityContext = new SecurityContextImpl(authToken);
+						return ReactiveSecurityContextHolder.withSecurityContext(Mono.just(securityContext));
+					}));
+		}).switchIfEmpty(chain.filter(exchange)).then(chain.filter(exchange));
 	}
 
 }
