@@ -1,22 +1,35 @@
 package cat.itacademy.s05.t02.config;
 
-import java.io.IOException;
+
+import java.net.URI;
 
 import org.springframework.security.core.Authentication;
-import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
 
-public class AuthenticationSuccessHandler extends SavedRequestAwareAuthenticationSuccessHandler {
+import org.springframework.http.HttpStatus;
+import org.springframework.security.web.server.WebFilterExchange;
+import org.springframework.security.web.server.authentication.ServerAuthenticationSuccessHandler;
+import org.springframework.stereotype.Component;
+import org.springframework.web.server.ServerWebExchange;
+import reactor.core.publisher.Mono;
+
+@Component
+public class AuthenticationSuccessHandler implements ServerAuthenticationSuccessHandler {
 	
 	@Override
-	public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
-			Authentication authentication) throws ServletException, IOException {
-		boolean isAdmin = authentication.getAuthorities().stream().anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ROLE_ADMIN"));
-		if(isAdmin) {
-			setDefaultTargetUrl("/admin/home");
-		} else {
-			setDefaultTargetUrl("/user/home");
-		}
-		
-		super.onAuthenticationSuccess(request, response, authentication);
+	public Mono<Void> onAuthenticationSuccess(WebFilterExchange webFilterExchange, Authentication authentication) {
+	    ServerWebExchange exchange = webFilterExchange.getExchange();
+
+	    return Mono.defer(() -> {
+	        boolean isAdmin = authentication.getAuthorities().stream()
+	            .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ROLE_ADMIN"));
+	        
+	        String redirectUrl = isAdmin ? "/admin/home" : "/user/home";
+
+	        exchange.getResponse().setStatusCode(HttpStatus.FOUND);
+	        exchange.getResponse().getHeaders().setLocation(URI.create(redirectUrl));
+	        
+	        return exchange.getResponse().setComplete();
+	    });
 	}
+
 }
