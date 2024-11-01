@@ -17,7 +17,7 @@ public class MyUserDetailService implements ReactiveUserDetailsService {
 	@Autowired
 	private MyUserRepository userRepository;
 
-	public Mono<UserDetails> findByUsername(Mono<String> monoUsername) {
+	public Mono<UserDetails> findByUsernameMono(Mono<String> monoUsername) {
 		return monoUsername.flatMap(username -> {
 			return userRepository.findByUsername(username)
 			.map(user -> User.builder().username(user.getUsername()).password(user.getPassword()).roles(getRoles(user))
