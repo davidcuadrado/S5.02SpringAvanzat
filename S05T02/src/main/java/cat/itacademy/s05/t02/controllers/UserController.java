@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import cat.itacademy.s05.t02.repositories.MyUserRepository;
+import cat.itacademy.s05.t02.repositories.PetRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import reactor.core.publisher.Mono;
@@ -22,6 +23,8 @@ public class UserController {
 	@Autowired
 	private MyUserRepository userRepository;
 	
+	@Autowired
+	private PetRepository petRepository;
 	
 
 	@Operation(summary = "User home page", description = "Home page for logged in users.")
