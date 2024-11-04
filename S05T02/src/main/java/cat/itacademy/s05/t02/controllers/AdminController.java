@@ -20,7 +20,7 @@ import reactor.core.publisher.Mono;
 @Tag(name = "App", description = "the Application API")
 @RestController
 @RequestMapping("/app")
-public class AppController {
+public class AdminController {
 
 	@Autowired
 	private UserService gameService;

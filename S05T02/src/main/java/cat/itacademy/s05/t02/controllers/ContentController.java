@@ -32,18 +32,6 @@ public class ContentController {
 		return Mono.just(ResponseEntity.ok("You are in the home site"));
 	}
 
-	@Operation(summary = "User home page", description = "Home page for logged in users.")
-	@GetMapping("/user/home")
-	public Mono<ResponseEntity<String>> handleUserWelcome() {
-		return Mono.just(ResponseEntity.ok("You are now logged in, welcome!"));
-	}
-
-	@Operation(summary = "Admin home page", description = "Home page for logged in admins.")
-	@GetMapping("/admin/home")
-	public Mono<ResponseEntity<String>> handleAdminWelcome() {
-		return Mono.just(ResponseEntity.ok("You are now logged in as admin, welcome!"));
-	}
-
 	@Operation(summary = "Login page", description = "Login page for all users")
 	@GetMapping("/login")
 	public Mono<ResponseEntity<String>> handleLogin() {
