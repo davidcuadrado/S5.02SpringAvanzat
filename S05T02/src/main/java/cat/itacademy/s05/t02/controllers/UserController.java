@@ -9,8 +9,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import cat.itacademy.s05.t02.models.MyUser;
+import cat.itacademy.s05.t02.models.Pet;
 import cat.itacademy.s05.t02.repositories.MyUserRepository;
 import cat.itacademy.s05.t02.repositories.PetRepository;
+import cat.itacademy.s05.t02.services.PetService;
+import cat.itacademy.s05.t02.services.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import reactor.core.publisher.Mono;
@@ -21,10 +25,10 @@ import reactor.core.publisher.Mono;
 public class UserController {
 	
 	@Autowired
-	private MyUserRepository userRepository;
+	private UserService userService;
 	
 	@Autowired
-	private PetRepository petRepository;
+	private PetService petService;
 	
 
 	@Operation(summary = "User home page", description = "Home page for logged in users.")
@@ -33,13 +37,15 @@ public class UserController {
 		return Mono.just(ResponseEntity.ok("You are now logged in, welcome!"));
 	}
 	
-	@Operation(summary = "Create a new pet", description = "Create a new user's pet ")
+	/*
+	@Operation(summary = "Create new pet", description = "Create a new user's pet ")
 	@PostMapping("/create")
-	public Mono<ResponseEntity<Pet>> createNewPet(@RequestBody String newPet) {
-		return petService.createNewPet(Mono.just(newPet))
-				.flatMap(player -> gameService.createNewGame(Mono.just(player))
-						.map(newGame -> ResponseEntity.status(HttpStatus.CREATED).body(newGame))
+	public Mono<ResponseEntity<MyUser>> createNewPet(@RequestBody String newPet) {
+		return userService.createNewPet(Mono.just(newPet))
+				.flatMap(pet -> userService.saveNewPet(Mono.just(pet))
+						.map(newGame -> ResponseEntity.status(HttpStatus.CREATED).body(newPet))
 						.onErrorMap(e -> new IllegalArgumentException("Error saving new game. ")));
 	}
+	*/
 
 }
