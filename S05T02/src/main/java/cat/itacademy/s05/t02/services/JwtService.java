@@ -55,9 +55,15 @@ public class JwtService {
 	}
 
 	public Mono<Boolean> isTokenValid(String jwt) {
-		return Mono.fromCallable(() -> {
-			Claims claims = getClaims(jwt);
-			return claims.getExpiration().after(Date.from(Instant.now()));
-		});
+	    return Mono.fromCallable(() -> {
+	        try {
+	            Claims claims = getClaims(jwt);
+	            Date expiration = claims.getExpiration();
+	            return expiration != null && expiration.after(Date.from(Instant.now()));
+	        } catch (IllegalArgumentException e) {
+	            return false;
+	        }
+	    });
 	}
+
 }
