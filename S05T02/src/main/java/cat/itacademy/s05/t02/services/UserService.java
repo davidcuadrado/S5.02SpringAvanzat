@@ -4,7 +4,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import cat.itacademy.s05.t02.exceptions.DatabaseException;
-import cat.itacademy.s05.t02.models.MyUser;
 import cat.itacademy.s05.t02.models.Pet;
 import cat.itacademy.s05.t02.repositories.MyUserRepository;
 import cat.itacademy.s05.t02.repositories.PetRepository;
@@ -19,12 +18,15 @@ public class UserService {
 	@Autowired
 	private PetRepository petRepository;
 
-	@Autowired
-	private JwtService jwtService;
+	public Mono<Pet> createNewPet(Mono<String> petName, Mono<String> monoUserId) {
+		return Mono.zip(petName, monoUserId).flatMap(tuple -> {
+			String name = tuple.getT1();
+			String userId = tuple.getT2();
 
-	public Mono<Pet> createNewPet(Mono<String> petName) {
-		return petName.flatMap(pet -> petRepository.save(new Pet(pet)))
-				.onErrorMap(e -> new DatabaseException("Error creating new pet. "));
+			Pet newPet = new Pet(name, userId);
+
+			return petRepository.save(newPet);
+		}).onErrorMap(e -> new DatabaseException("Error creating new pet."));
 	}
 
 }

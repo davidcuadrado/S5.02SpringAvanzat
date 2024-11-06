@@ -16,14 +16,24 @@ public class PetService {
 	@Autowired
 	private PetRepository petRepository;
 
-	public Mono<Pet> createNewPetString(Mono<String> petName) {
-		return petName.flatMap(pet -> petRepository.save(new Pet(pet)))
-				.onErrorMap(e -> new DatabaseException("Error creating new pet. "));
+	public Mono<Pet> createNewPet(Mono<String> petName, Mono<String> monoUserId) {
+		return Mono.zip(petName, monoUserId).flatMap(tuple -> {
+			String name = tuple.getT1();
+			String userId = tuple.getT2();
+
+			Pet newPet = new Pet(name, userId);
+
+			return petRepository.save(newPet);
+		}).onErrorMap(e -> new DatabaseException("Error creating new pet."));
 	}
 
 	public Mono<Pet> createNewPet(Mono<Pet> monoPet) {
 		return monoPet.flatMap(pet -> petRepository.save(pet))
 				.onErrorMap(e -> new DatabaseException("Error creating new pet"));
+	}
+	
+	public Mono<Pet> findPetById(Mono<String> monoPetId) {
+		return monoPetId.flatMap(petId -> petRepository.findById(petId));
 	}
 
 	public Flux<Pet> getAllPets() {
@@ -45,5 +55,7 @@ public class PetService {
 			return existingPet;
 		}).flatMap(petRepository::save));
 	}
+
+	
 
 }

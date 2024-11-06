@@ -19,7 +19,7 @@ public class Pet {
 	private String id;
 	@Getter
 	@Setter
-	private String user;
+	private String userId;
 	@Getter
 	@Setter
 	private String name;
@@ -46,13 +46,30 @@ public class Pet {
 	private ArrayList<String> specialTreats;
 	
 
-	public Pet(String name) {
+	public Pet(String name, String userId) {
 		this.name = name;
+		this.userId = userId;
 	}
 
 
 	public String getPetId() {
 		return this.id;
+	}
+	
+	public String getUserId() {
+		return this.userId;
+	}
+
+
+	public void setName(String name2) {
+		// TODO Auto-generated method stub
+		
+	}
+
+
+	public void setOwnerId(String userId2) {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

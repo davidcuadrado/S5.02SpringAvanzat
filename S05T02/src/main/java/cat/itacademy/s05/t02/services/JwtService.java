@@ -45,6 +45,10 @@ public class JwtService {
 	public Mono<String> extractUsername(String jwt) {
 		return Mono.fromCallable(() -> getClaims(jwt).getSubject());
 	}
+	
+	public Mono<String> extractUserId(String jwt) {
+        return Mono.fromCallable(() -> getClaims(jwt).get("userId", String.class));
+    }
 
 	private Claims getClaims(String jwt) {
 		return Jwts.parser().verifyWith(generateKey()).build().parseSignedClaims(jwt).getPayload();

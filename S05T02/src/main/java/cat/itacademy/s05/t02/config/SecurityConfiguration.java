@@ -32,7 +32,7 @@ public class SecurityConfiguration {
 		return http.csrf(csrf -> csrf.disable())
 				.authorizeExchange(auth -> auth
 						.matchers(ServerWebExchangeMatchers.pathMatchers("/home", "/register/**", "/authenticate/**"))
-						.permitAll().pathMatchers("/user/**").hasRole("USER").pathMatchers("/admin/**").hasRole("ADMIN")
+						.permitAll().pathMatchers("/user/**", "/pet/**").hasRole("USER").pathMatchers("/admin/**", "/user/**", "/pet/**").hasRole("ADMIN")
 						.anyExchange().authenticated())
 				.addFilterAt(jwtAuthenticationFilter, SecurityWebFiltersOrder.AUTHENTICATION)
 				.formLogin(

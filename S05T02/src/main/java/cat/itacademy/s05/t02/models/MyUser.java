@@ -1,7 +1,5 @@
 package cat.itacademy.s05.t02.models;
 
-import java.util.ArrayList;
-
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -20,7 +18,6 @@ public class MyUser {
 	private @Setter @Getter String username;
 	private @Setter @Getter String password;
 	private @Setter @Getter String role;
-	private @Setter @Getter ArrayList<Pet> petList;
 
 
 	public MyUser(String username, String password) {
