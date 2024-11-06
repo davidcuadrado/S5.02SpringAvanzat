@@ -19,12 +19,18 @@ import reactor.core.publisher.Mono;
 
 @Tag(name = "App", description = "the Application API")
 @RestController
-@RequestMapping("/app")
+@RequestMapping("/admin")
 public class AdminController {
 
 	@Autowired
 	private UserService gameService;
 	@Autowired
 	private PetService playerService;
+	
+	@Operation(summary = "Admin home page", description = "Home page for logged in admins.")
+	@GetMapping("/home")
+	public Mono<ResponseEntity<String>> handleAdminWelcome() {
+		return Mono.just(ResponseEntity.ok("Welcome back, you are now logged in!"));
+	}
 
 }

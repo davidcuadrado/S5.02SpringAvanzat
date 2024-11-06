@@ -18,7 +18,7 @@ public class UserService {
 
 	@Autowired
 	private PetRepository petRepository;
-	
+
 	@Autowired
 	private JwtService jwtService;
 
@@ -26,14 +26,5 @@ public class UserService {
 		return petName.flatMap(pet -> petRepository.save(new Pet(pet)))
 				.onErrorMap(e -> new DatabaseException("Error creating new pet. "));
 	}
-	
-	/*
-	public Mono<MyUser> saveNewPet(Mono<Pet> newPet){
-		return newPet.flatMap(pet -> {
-			jwtService.extractIUse
-		}
-	
-	}
-	*/
 
 }
