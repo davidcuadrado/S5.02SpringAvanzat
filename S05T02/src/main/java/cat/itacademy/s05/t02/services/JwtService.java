@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.security.Keys;
 import reactor.core.publisher.Mono;
 
@@ -24,22 +25,17 @@ public class JwtService {
 	private static final long VALIDITY = TimeUnit.MINUTES.toMillis(30);
 
 	public Mono<String> generateToken(Mono<UserDetails> userDetailsMono) {
-	    return userDetailsMono.flatMap(userDetails -> {
-	        return Mono.fromCallable(() -> {
-	            Map<String, Object> claims = new HashMap<>();
-	            claims.put("iss", "ITAcademyS05T02");
+		return userDetailsMono.flatMap(userDetails -> {
+			return Mono.fromCallable(() -> {
+				Map<String, Object> claims = new HashMap<>();
+				claims.put("iss", "ITAcademyS05T02");
 
-	            return Jwts.builder()
-	                .claims(claims)
-	                .subject(userDetails.getUsername())
-	                .issuedAt(Date.from(Instant.now()))
-	                .expiration(Date.from(Instant.now().plusMillis(VALIDITY)))
-	                .signWith(generateKey())
-	                .compact();
-	        });
-	    });
+				return Jwts.builder().claims(claims).subject(userDetails.getUsername())
+						.issuedAt(Date.from(Instant.now())).expiration(Date.from(Instant.now().plusMillis(VALIDITY)))
+						.signWith(generateKey()).compact();
+			});
+		});
 	}
-
 
 	private SecretKey generateKey() {
 		byte[] decodedKey = Base64.getDecoder().decode(SECRET);
@@ -55,15 +51,15 @@ public class JwtService {
 	}
 
 	public Mono<Boolean> isTokenValid(String jwt) {
-	    return Mono.fromCallable(() -> {
-	        try {
-	            Claims claims = getClaims(jwt);
-	            Date expiration = claims.getExpiration();
-	            return expiration != null && expiration.after(Date.from(Instant.now()));
-	        } catch (IllegalArgumentException e) {
-	            return false;
-	        }
-	    });
+		return Mono.fromCallable(() -> {
+			try {
+				Claims claims = getClaims(jwt);
+				Date expiration = claims.getExpiration();
+				return expiration != null && expiration.after(Date.from(Instant.now()));
+			} catch (MalformedJwtException | IllegalArgumentException e) {
+				return false;
+			}
+		});
 	}
 
 }

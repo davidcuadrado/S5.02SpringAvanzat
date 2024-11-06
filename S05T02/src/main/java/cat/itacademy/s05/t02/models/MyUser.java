@@ -44,6 +44,11 @@ public class MyUser {
 		this.password = password;
 		
 	}
+
+	public void setUsername(String newUsername) {
+		this.username = newUsername;
+		
+	}
 	
 	
 
