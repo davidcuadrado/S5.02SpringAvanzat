@@ -17,9 +17,14 @@ public class PetService {
 	@Autowired
 	private PetRepository petRepository;
 
-	public Mono<Pet> createNewPet(Mono<String> petName) {
+	public Mono<Pet> createNewPetString(Mono<String> petName) {
 		return petName.flatMap(pet -> petRepository.save(new Pet(pet)))
-				.onErrorMap(e -> new DatabaseException("Error creating new player"));
+				.onErrorMap(e -> new DatabaseException("Error creating new pet. "));
+	}
+	
+	public Mono<Pet> createNewPet(Mono<Pet> monoPet) {
+		return monoPet.flatMap(pet -> petRepository.save(pet))
+				.onErrorMap(e -> new DatabaseException("Error creating new pet"));
 	}
 
 	public Flux<Pet> getAllPets() {
@@ -34,6 +39,16 @@ public class PetService {
 	}
 
 	public Mono<ResponseEntity<String>> saveNewPet(Mono<Pet> just) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public Flux<Pet> createNewPet(Pet pet) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public Mono<Pet> updatePet(Mono<String> id, Mono<String> petAction) {
 		// TODO Auto-generated method stub
 		return null;
 	}
