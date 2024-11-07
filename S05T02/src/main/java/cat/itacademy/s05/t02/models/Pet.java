@@ -6,70 +6,119 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
 
-@Data
 @Schema(description = "Pet entity that represent every existing pet. ")
 @Document(collection = "pet")
 public class Pet {
 
 	@Id
 	private String id;
-	@Getter
-	@Setter
 	private String userId;
-	@Getter
-	@Setter
 	private String name;
-	@Getter
-	@Setter
 	private PetType petType;
-	@Getter
-	@Setter
 	private PetMood currentMood;
-	@Getter
-	@Setter
 	private int happiness;
-	@Getter
-	@Setter
 	private int energy;
-	@Getter
-	@Setter
 	private int hunger;
-	@Getter
-	@Setter
 	private String color;
-	@Getter
-	@Setter
 	private ArrayList<String> specialTreats;
-	
+	private String environment;
 
 	public Pet(String name, String userId) {
 		this.name = name;
 		this.userId = userId;
 	}
 
-
 	public String getPetId() {
 		return this.id;
 	}
-	
+
 	public String getUserId() {
 		return this.userId;
 	}
-
-
-	public void setName(String name2) {
-		// TODO Auto-generated method stub
-		
+	
+	public void setUserId(String userId) {
+		this.userId = userId;
 	}
 
-
-	public void setOwnerId(String userId2) {
-		// TODO Auto-generated method stub
-		
+	public void setName(String petName) {
+		this.name = petName;
 	}
+	
+	public String getName() {
+		return name;
+	}
+
+	public PetType getPetType() {
+		return petType;
+	}
+
+	public void setPetType(PetType petType) {
+		this.petType = petType;
+	}
+
+	public PetMood getCurrentMood() {
+		return currentMood;
+	}
+
+	public void setCurrentMood(PetMood currentMood) {
+		this.currentMood = currentMood;
+	}
+
+	public int getHappiness() {
+		return happiness;
+	}
+
+	public void setHappiness(int happiness) {
+		this.happiness = happiness;
+	}
+
+	public int getEnergy() {
+		return energy;
+	}
+
+	public void setEnergy(int energy) {
+		this.energy = energy;
+	}
+
+	public int getHunger() {
+		return hunger;
+	}
+
+	public void setHunger(int hunger) {
+		this.hunger = hunger;
+	}
+
+	public String getColor() {
+		return color;
+	}
+
+	public void setColor(String color) {
+		this.color = color;
+	}
+
+	public ArrayList<String> getSpecialTreats() {
+		return specialTreats;
+	}
+
+	public void setSpecialTreats(ArrayList<String> specialTreats) {
+		this.specialTreats = specialTreats;
+	}
+	
+	public void addSpecialTreats(String specialTreat) {
+		this.specialTreats.add(specialTreat);
+	}
+
+	public String getEnvironment() {
+		return environment;
+	}
+
+	public void setEnvironment(String environment) {
+		this.environment = environment;
+	}
+	
+	
+
+	
 
 }
