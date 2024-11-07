@@ -3,6 +3,7 @@ package cat.itacademy.s05.t02.services;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import cat.itacademy.s05.t02.exceptions.DatabaseException;
 import cat.itacademy.s05.t02.exceptions.NotFoundException;
 import cat.itacademy.s05.t02.models.Pet;
 import cat.itacademy.s05.t02.models.PetMood;
