@@ -57,7 +57,7 @@ public class UserController {
 	}
 
 	@Operation(summary = "Get all user's pets", description = "Retrieve all existing pets from the user. ")
-	@GetMapping("/pets")
+	@GetMapping("/read")
 	public Mono<ResponseEntity<Flux<Pet>>> getUserPets(@RequestHeader("Authorization") String authHeader) {
 		String jwt = authHeader.replace("Bearer ", "");
 		return jwtService.extractUserId(jwt).flatMapMany(userId -> petService.getPetsByUserId(Mono.just(userId)))
@@ -68,6 +68,17 @@ public class UserController {
 						return Mono.just(ResponseEntity.ok(Flux.fromIterable(pets)));
 					}
 				});
+	}
+
+	@Operation(summary = "Get a pet from user", description = "Retrieve an specific pet from the user. ")
+	@GetMapping("/{id}")
+	public Mono<ResponseEntity<Pet>> getUserSpecificPet(@RequestHeader("Authorization") String authHeader,
+			@PathVariable("id") String petId) {
+
+		String jwt = authHeader.replace("Bearer ", "");
+		return jwtService.extractUserId(jwt)
+				.flatMap(userId -> petService.getPetByUserIdAndPetId(Mono.just(userId), Mono.just(petId)))
+				.map(pet -> ResponseEntity.ok(pet)).defaultIfEmpty(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
 	}
 
 	@Operation(summary = "Delete a pet", description = "Delete an existing pet introducing its pet ID. ")

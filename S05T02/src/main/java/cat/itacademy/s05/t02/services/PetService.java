@@ -31,14 +31,13 @@ public class PetService {
 		return monoPet.flatMap(pet -> petRepository.save(pet))
 				.onErrorMap(e -> new DatabaseException("Error creating new pet"));
 	}
-	
+
 	public Mono<Pet> findPetById(Mono<String> monoPetId) {
 		return monoPetId.flatMap(petId -> petRepository.findById(petId));
 	}
-	
+
 	public Flux<Pet> getPetsByUserId(Mono<String> userId) {
-	    return userId.flatMapMany(id -> petRepository.findAllByUserId(id))
-	            .switchIfEmpty(Flux.empty());
+		return userId.flatMapMany(id -> petRepository.findAllByUserId(id)).switchIfEmpty(Flux.empty());
 	}
 
 	public Flux<Pet> getAllPets() {
@@ -53,6 +52,14 @@ public class PetService {
 				.flatMap(existingGame -> petRepository.delete(existingGame).then(Mono.just(existingGame)));
 	}
 
+	public Mono<Pet> getPetByUserIdAndPetId(Mono<String> monoUserId, Mono<String> monoPetId) {
+		return monoUserId.zipWith(monoPetId).flatMap(tuple -> {
+			String userId = tuple.getT1();
+			String petId = tuple.getT2();
+			return petRepository.findByUserIdAndPetId(userId, petId);
+		});
+	}
+
 	public Mono<Pet> updatePet(Mono<String> petIdMono, Mono<String> petActionMono) {
 		return petIdMono.flatMap(id -> petRepository.findById(id).zipWith(petActionMono, (existingPet, action) -> {
 			// Bussiness logic
@@ -60,9 +67,5 @@ public class PetService {
 			return existingPet;
 		}).flatMap(petRepository::save));
 	}
-
-	
-
-	
 
 }
