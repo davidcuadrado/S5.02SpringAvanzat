@@ -35,11 +35,16 @@ public class PetService {
 	public Mono<Pet> findPetById(Mono<String> monoPetId) {
 		return monoPetId.flatMap(petId -> petRepository.findById(petId));
 	}
+	
+	public Flux<Pet> getPetsByUserId(Mono<String> userId) {
+	    return userId.flatMapMany(id -> petRepository.findAllByUserId(id))
+	            .switchIfEmpty(Flux.empty());
+	}
 
 	public Flux<Pet> getAllPets() {
-		return petRepository.findAll().switchIfEmpty(Mono.error(new NotFoundException("No existing players to show. ")))
+		return petRepository.findAll().switchIfEmpty(Mono.error(new NotFoundException("No existing pets to show. ")))
 				.sort((pet1, pet2) -> pet1.getPetId().compareTo(pet2.getPetId()))
-				.onErrorMap(e -> new DatabaseException("Error retrieving ranked players. "));
+				.onErrorMap(e -> new DatabaseException("Error retrieving pets. "));
 	}
 
 	public Mono<Pet> deletePetById(Mono<String> monoPetId) {
@@ -55,6 +60,8 @@ public class PetService {
 			return existingPet;
 		}).flatMap(petRepository::save));
 	}
+
+	
 
 	
 

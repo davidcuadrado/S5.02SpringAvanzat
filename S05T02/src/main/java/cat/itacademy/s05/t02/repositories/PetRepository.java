@@ -9,6 +9,6 @@ import reactor.core.publisher.Flux;
 @Repository
 public interface PetRepository extends ReactiveMongoRepository<Pet, String>{
 	
-	Flux<Pet> findAllByOwnerId(String ownerId);
+	Flux<Pet> findAllByUserId(String ownerId);
 
 }

@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -44,26 +45,6 @@ public class UserController {
 		return Mono.just(ResponseEntity.ok("You are now logged in, welcome!"));
 	}
 
-	@Operation(summary = "Delete a pet", description = "Delete an existing pet introducing its pet ID. ")
-	@DeleteMapping("/{id}/delete")
-	public Mono<ResponseEntity<String>> deleteGame(@RequestHeader("Authorization") String authHeader,
-			@PathVariable("id") String petId) {
-		String jwt = authHeader.replace("Bearer ", "");
-		return jwtService.extractUserId(jwt)
-				.flatMap(searchByPetId -> petService.findPetById(Mono.just(petId)).flatMap(pet -> {
-					if (pet.getUserId().equals(jwtService.extractUserId(jwt))) {
-						return petService.deletePetById(Mono.just(petId)).then(Mono.just(ResponseEntity
-								.status(HttpStatus.NO_CONTENT).body("Pet " + petId + " deleted successfully")));
-					} else {
-
-						return Mono.just(ResponseEntity.status(HttpStatus.FORBIDDEN)
-								.body("You are not authorized to delete this pet."));
-					}
-				})
-
-						.switchIfEmpty(Mono.error(new NotFoundException("Pet with ID: " + petId + " not found"))));
-	}
-	
 	@Operation(summary = "Create new pet", description = "Create a new user's pet ")
 	@PostMapping("/create")
 	public Mono<ResponseEntity<Pet>> createNewPet(@RequestHeader("Authorization") String authHeader,
@@ -75,10 +56,42 @@ public class UserController {
 				.onErrorResume(e -> Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null)));
 	}
 
-	@Operation(summary = "Get all user pets", description = "Retrieve all user existing pets. ")
+	@Operation(summary = "Get all user's pets", description = "Retrieve all existing pets from the user. ")
 	@GetMapping("/pets")
-	public Flux<Pet> getUserPets() {
-		return petService.getAllPets().switchIfEmpty(Flux.error(new NotFoundException("No pets found for the user.")));
+	public Mono<ResponseEntity<Flux<Pet>>> getUserPets(@RequestHeader("Authorization") String authHeader) {
+		String jwt = authHeader.replace("Bearer ", "");
+		return jwtService.extractUserId(jwt).flatMapMany(userId -> petService.getPetsByUserId(Mono.just(userId)))
+				.collectList().flatMap(pets -> {
+					if (pets.isEmpty()) {
+						return Mono.just(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
+					} else {
+						return Mono.just(ResponseEntity.ok(Flux.fromIterable(pets)));
+					}
+				});
+	}
+
+	@Operation(summary = "Delete a pet", description = "Delete an existing pet introducing its pet ID. ")
+	@DeleteMapping("/{id}/delete")
+	public Mono<ResponseEntity<String>> deleteGame(@RequestHeader("Authorization") String authHeader,
+			@PathVariable("id") String petId) {
+		String jwt = authHeader.replace("Bearer ", "");
+		return jwtService.extractUserId(jwt)
+				.flatMap(searchByPetId -> petService.findPetById(Mono.just(petId)).flatMap(pet -> {
+					if (pet.getUserId().equals(jwtService.extractUserId(jwt))) {
+						return petService.deletePetById(Mono.just(petId)).then(Mono.just(ResponseEntity
+								.status(HttpStatus.NO_CONTENT).body("Pet " + petId + " deleted successfully")));
+					} else {
+						return Mono.just(ResponseEntity.status(HttpStatus.FORBIDDEN)
+								.body("You are not authorized to delete this pet."));
+					}
+				}).switchIfEmpty(Mono.error(new NotFoundException("Pet with ID: " + petId + " not found"))));
+	}
+
+	@Operation(summary = "Interact with a pet", description = "Interact with a pet using an specific action. ")
+	@PutMapping("/{id}/update")
+	public Mono<ResponseEntity<Pet>> updatePet(@PathVariable String id, @RequestBody String petAction) {
+		return petService.updatePet(Mono.just(id), Mono.just(petAction))
+				.map(updatedPet -> ResponseEntity.ok(updatedPet)).defaultIfEmpty(ResponseEntity.notFound().build());
 	}
 
 }
