@@ -1,6 +1,8 @@
 package cat.itacademy.s05.t02.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import cat.itacademy.s05.t02.exceptions.DatabaseException;
@@ -60,12 +62,25 @@ public class PetService {
 		});
 	}
 
-	public Mono<Pet> updatePet(Mono<String> monoPetId, Mono<String> monoPetAction) {
-		return monoPetId.flatMap(id -> petRepository.findById(id).zipWith(monoPetAction, (existingPet, action) -> {
-			// Bussiness logic
-			// i.e.: existingPet.setAction(action);
-			return existingPet;
-		}).flatMap(petRepository::save));
+	public Mono<ResponseEntity<Pet>> updatePet(String petId, String petAction) {
+	    return petRepository.findById(petId)
+	        .flatMap(existingPet -> {
+	            switch (petAction.toLowerCase()) {
+	                case "play":
+	                    
+	                    break;
+	                case "feed":
+	                   
+	                    break;
+	                default:
+	                    return Mono.error(new IllegalArgumentException("Invalid action type."));
+	            }
+	            return petRepository.save(existingPet);
+	        })
+	        .map(updatedPet -> ResponseEntity.ok(updatedPet))
+	        .defaultIfEmpty(ResponseEntity.status(HttpStatus.NOT_FOUND).build())
+	        .onErrorResume(e -> Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null)));
 	}
+
 
 }

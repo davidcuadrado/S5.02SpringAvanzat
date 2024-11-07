@@ -87,8 +87,8 @@ public class UserController {
 			@PathVariable("id") String petId) {
 		String jwt = authHeader.replace("Bearer ", "");
 		return jwtService.extractUserId(jwt)
-				.flatMap(searchByPetId -> petService.findPetById(Mono.just(petId)).flatMap(pet -> {
-					if (pet.getUserId().equals(jwtService.extractUserId(jwt))) {
+				.flatMap(userId -> petService.findPetById(Mono.just(petId)).flatMap(pet -> {
+					if (pet.getUserId().equals(userId)) {
 						return petService.deletePetById(Mono.just(petId)).then(Mono.just(ResponseEntity
 								.status(HttpStatus.NO_CONTENT).body("Pet " + petId + " deleted successfully")));
 					} else {
@@ -100,9 +100,22 @@ public class UserController {
 
 	@Operation(summary = "Interact with a pet", description = "Interact with a pet using an specific action. ")
 	@PutMapping("/{id}/update")
-	public Mono<ResponseEntity<Pet>> updatePet(@PathVariable String id, @RequestBody String petAction) {
-		return petService.updatePet(Mono.just(id), Mono.just(petAction))
-				.map(updatedPet -> ResponseEntity.ok(updatedPet)).defaultIfEmpty(ResponseEntity.notFound().build());
+	public Mono<ResponseEntity<Pet>> updatePet(@RequestHeader("Authorization") String authHeader,
+			@PathVariable("id") String petId, @RequestBody String petAction) {
+		String jwt = authHeader.replace("Bearer ", "");
+		return jwtService.extractUserId(jwt)
+				.flatMap(userId -> petService.findPetById(Mono.just(petId)).flatMap(pet -> {
+					if (pet.getUserId().equals(userId)) {
+						return petService.updatePet(Mono.just(petId), Mono.just(petAction))
+							    .map(updatedPet -> ResponseEntity.ok(updatedPet))
+							    .defaultIfEmpty(ResponseEntity.status(HttpStatus.NOT_FOUND).build())
+							    .onErrorResume(e -> Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error processing the petition. ")));
+
+								
+					} else {
+						return Mono.just(ResponseEntity.status(HttpStatus.FORBIDDEN).body("You are no authorized to interact with this pet. "));
+					}
+				}).switchIfEmpty(Mono.error(new NotFoundException("Pet with ID: " + petId + " not found"))));
 	}
 
 }
