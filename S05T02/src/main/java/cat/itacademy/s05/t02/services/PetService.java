@@ -36,8 +36,8 @@ public class PetService {
 		return monoPetId.flatMap(petId -> petRepository.findById(petId));
 	}
 
-	public Flux<Pet> getPetsByUserId(Mono<String> userId) {
-		return userId.flatMapMany(id -> petRepository.findAllByUserId(id)).switchIfEmpty(Flux.empty());
+	public Flux<Pet> getPetsByUserId(Mono<String> monoUserId) {
+		return monoUserId.flatMapMany(id -> petRepository.findAllByUserId(id)).switchIfEmpty(Flux.empty());
 	}
 
 	public Flux<Pet> getAllPets() {
@@ -60,8 +60,8 @@ public class PetService {
 		});
 	}
 
-	public Mono<Pet> updatePet(Mono<String> petIdMono, Mono<String> petActionMono) {
-		return petIdMono.flatMap(id -> petRepository.findById(id).zipWith(petActionMono, (existingPet, action) -> {
+	public Mono<Pet> updatePet(Mono<String> monoPetId, Mono<String> monoPetAction) {
+		return monoPetId.flatMap(id -> petRepository.findById(id).zipWith(monoPetAction, (existingPet, action) -> {
 			// Bussiness logic
 			// i.e.: existingPet.setAction(action);
 			return existingPet;
