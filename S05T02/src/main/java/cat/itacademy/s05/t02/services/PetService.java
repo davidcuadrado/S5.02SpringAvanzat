@@ -2,9 +2,11 @@ package cat.itacademy.s05.t02.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import java.util.Random;
 
 import cat.itacademy.s05.t02.exceptions.DatabaseException;
 import cat.itacademy.s05.t02.exceptions.NotFoundException;
+import cat.itacademy.s05.t02.exceptions.PetActionException;
 import cat.itacademy.s05.t02.models.Pet;
 import cat.itacademy.s05.t02.models.PetMood;
 import cat.itacademy.s05.t02.repositories.PetRepository;
@@ -16,6 +18,8 @@ public class PetService {
 
 	@Autowired
 	private PetRepository petRepository;
+
+	private static final Random random = new Random();
 
 	public Mono<Pet> createNewPet(Mono<String> petName, Mono<String> monoUserId) {
 		return Mono.zip(petName, monoUserId).flatMap(tuple -> {
@@ -73,15 +77,34 @@ public class PetService {
 		return monoPetId.flatMap(id -> petRepository.findById(id).flatMap(pet -> monoPetAction.flatMap(petAction -> {
 			switch (petAction.toLowerCase()) {
 			case "feed":
-				return feedPet(monoPetId).then(petRepository.save(pet));
+				return feedPet(monoPetId);
 
 			case "play":
-				return playWithPet(monoPetId).then(petRepository.save(pet));
+				return playWithPet(monoPetId);
 
 			case "environment":
-				return changeEnvironment(monoPetId, "requested environment").then(petRepository.save(pet));
+				return changeEnvironment(monoPetId, Mono.just("requested environment"));
+
 			case "cheer":
-				return cheerPet(monoPetId).then(petRepository.save(pet));
+				return cheerPet(monoPetId);
+
+			case "accessory":
+				return addAccessory(monoPetId, Mono.just("requested accessory"));
+
+			case "sleep":
+				return putPetToSleep(monoPetId);
+
+			case "clean":
+				return cleanPet(monoPetId);
+
+			case "adventure":
+				return takePetOnAdventure(monoPetId);
+
+			case "check":
+				return checkAndRestoreHealth(monoPetId);
+
+			case "special":
+				return giveSpecialTreat(monoPetId, Mono.just("request special treat"));
 
 			default:
 				return Mono.error(
@@ -94,6 +117,14 @@ public class PetService {
 		return petRepository.findById(petId).flatMap(pet -> {
 			pet.setHunger(Math.max(pet.getHunger() - 20, 0));
 			pet.setHappiness(pet.getHappiness() + 10);
+			pet.setEnergy(Math.min(pet.getEnergy() + 5, 100));
+			pet.setHygiene(Math.max(pet.getHygiene() - 5, 0));
+
+			if (random.nextDouble() < 0.1) {
+				pet.setHealth(Math.max(pet.getHealth() - 30, 0));
+				pet.setHappiness(Math.max(pet.getHappiness() - 20, 0));
+			}
+
 			return petRepository.save(pet);
 		}).switchIfEmpty(Mono.error(new NotFoundException("Pet not found")));
 	}
@@ -101,26 +132,47 @@ public class PetService {
 	public Mono<Pet> playWithPet(Mono<String> petId) {
 		return petRepository.findById(petId).flatMap(pet -> {
 			if (pet.getEnergy() < 10) {
-				return Mono.error(new DatabaseException("Pet is too tired to play"));
+				return Mono.error(new PetActionException("Pet is too tired to play"));
 			}
 			pet.setEnergy(pet.getEnergy() - 10);
 			pet.setHappiness(pet.getHappiness() + 15);
+			pet.setHygiene(Math.max(pet.getHygiene() - 10, 0));
+
+			if (random.nextDouble() < 0.2) {
+				pet.setHealth(Math.max(pet.getHealth() - 25, 0));
+				pet.setEnergy(Math.max(pet.getEnergy() - 15, 0));
+			}
+
 			return petRepository.save(pet);
 		}).switchIfEmpty(Mono.error(new NotFoundException("Pet not found")));
 	}
 
-	public Mono<Pet> changeEnvironment(Mono<String> petId, String environment) {
-		return petRepository.findById(petId).flatMap(pet -> {
-			pet.setEnvironment(environment);
+	public Mono<Pet> changeEnvironment(Mono<String> petId, Mono<String> environment) {
+		return petId.flatMap(id -> petRepository.findById(id).flatMap(pet -> environment.map(env -> {
+			pet.setEnvironment(env);
 			pet.setHappiness(pet.getHappiness() + 5);
-			return petRepository.save(pet);
-		}).switchIfEmpty(Mono.error(new NotFoundException("Pet not found")));
+			pet.setEnergy(Math.max(pet.getEnergy() - 5, 0));
+
+			if (random.nextDouble() < 0.15) { // 15% chance of environment being uncomfortable
+				pet.setHappiness(Math.max(pet.getHappiness() - 20, 0));
+				pet.setEnergy(Math.max(pet.getEnergy() - 10, 0));
+			}
+
+			return pet;
+		})).flatMap(petRepository::save)).switchIfEmpty(Mono.error(new NotFoundException("Pet not found")));
 	}
 
 	public Mono<Pet> cheerPet(Mono<String> petId) {
 		return petRepository.findById(petId).flatMap(pet -> {
 			pet.setCurrentMood(PetMood.HAPPY);
 			pet.setHappiness(pet.getHappiness() + 10);
+			pet.setEnergy(Math.max(pet.getEnergy() - 5, 0));
+
+			if (random.nextDouble() < 0.05) { // 5% chance of pet feeling anxious instead
+				pet.setCurrentMood(PetMood.ANXIOUS);
+				pet.setHappiness(Math.max(pet.getHappiness() - 15, 0));
+			}
+
 			return petRepository.save(pet);
 		}).switchIfEmpty(Mono.error(new NotFoundException("Pet not found")));
 	}
@@ -129,6 +181,91 @@ public class PetService {
 		return petId.flatMap(id -> petRepository.findById(id).flatMap(pet -> accessory.map(acc -> {
 			pet.getSpecialTreats().add(acc);
 			pet.setHappiness(pet.getHappiness() + 5);
+			pet.setHygiene(Math.max(pet.getHygiene() - 5, 0));
+
+			if (random.nextDouble() < 0.1) { // 10% chance accessory causes discomfort
+				pet.setHappiness(Math.max(pet.getHappiness() - 10, 0));
+			}
+
+			return pet;
+		})).flatMap(petRepository::save)).switchIfEmpty(Mono.error(new NotFoundException("Pet not found")));
+	}
+
+	public Mono<Pet> putPetToSleep(Mono<String> petId) {
+		return petId.flatMap(id -> petRepository.findById(id).flatMap(pet -> {
+			pet.setEnergy(Math.min(pet.getEnergy() + 50, 100));
+			pet.setHappiness(pet.getHappiness() + 5);
+			pet.setHunger(Math.min(pet.getHunger() + 10, 100));
+
+			if (random.nextDouble() < 0.05) { // 5% chance of bad dreams
+				pet.setHappiness(Math.max(pet.getHappiness() - 15, 0));
+				pet.setEnergy(Math.max(pet.getEnergy() - 10, 0));
+			}
+
+			return petRepository.save(pet);
+		})).switchIfEmpty(Mono.error(new NotFoundException("Pet not found")));
+	}
+
+	public Mono<Pet> cleanPet(Mono<String> petId) {
+		return petId.flatMap(id -> petRepository.findById(id).flatMap(pet -> {
+			pet.setHygiene(Math.min(pet.getHygiene() + 30, 100));
+			pet.setHappiness(pet.getHappiness() + 5);
+			pet.setEnergy(Math.max(pet.getEnergy() - 5, 0));
+
+			if (random.nextDouble() < 0.1) { // 10% chance of water being too cold
+				pet.setHappiness(Math.max(pet.getHappiness() - 10, 0));
+			}
+
+			return petRepository.save(pet);
+		})).switchIfEmpty(Mono.error(new NotFoundException("Pet not found")));
+	}
+
+	public Mono<Pet> takePetOnAdventure(Mono<String> petId) {
+		return petId.flatMap(id -> petRepository.findById(id).flatMap(pet -> {
+			if (pet.getEnergy() < 20) {
+				return Mono.error(new DatabaseException("Pet is too tired for an adventure"));
+			}
+			pet.setEnergy(pet.getEnergy() - 20);
+			pet.setHappiness(pet.getHappiness() + 20);
+			pet.setHygiene(Math.max(pet.getHygiene() - 15, 0));
+
+			if (random.nextDouble() < 0.2) { // 20% chance of pet getting lost temporarily
+				pet.setHappiness(Math.max(pet.getHappiness() - 25, 0));
+				pet.setEnergy(Math.max(pet.getEnergy() - 20, 0));
+			}
+
+			return petRepository.save(pet);
+		})).switchIfEmpty(Mono.error(new NotFoundException("Pet not found")));
+	}
+
+	public Mono<Pet> checkAndRestoreHealth(Mono<String> petId) {
+		return petId.flatMap(id -> petRepository.findById(id).flatMap(pet -> {
+			if (pet.getHealth() < 50) {
+				pet.setHealth(100); // Restoring health fully
+				pet.setHappiness(pet.getHappiness() + 10);
+				pet.setEnergy(Math.max(pet.getEnergy() - 10, 0));
+
+				if (random.nextDouble() < 0.05) { // 5% chance of unexpected side effect
+					pet.setHealth(Math.max(pet.getHealth() - 20, 0));
+					pet.setHappiness(Math.max(pet.getHappiness() - 15, 0));
+				}
+			}
+			return petRepository.save(pet);
+		})).switchIfEmpty(Mono.error(new NotFoundException("Pet not found")));
+	}
+
+	public Mono<Pet> giveSpecialTreat(Mono<String> petId, Mono<String> treat) {
+		return petId.flatMap(id -> petRepository.findById(id).flatMap(pet -> treat.map(t -> {
+			pet.getSpecialTreats().add(t);
+			pet.setHappiness(pet.getHappiness() + 10);
+			pet.setEnergy(Math.min(pet.getEnergy() + 10, 100));
+			pet.setHygiene(Math.max(pet.getHygiene() - 5, 0));
+
+			if (random.nextDouble() < 0.1) { // 10% chance of treat causing upset stomach
+				pet.setHappiness(Math.max(pet.getHappiness() - 15, 0));
+				pet.setHealth(Math.max(pet.getHealth() - 20, 0));
+			}
+
 			return pet;
 		})).flatMap(petRepository::save)).switchIfEmpty(Mono.error(new NotFoundException("Pet not found")));
 	}

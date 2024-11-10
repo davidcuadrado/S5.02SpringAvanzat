@@ -20,6 +20,8 @@ public class Pet {
 	private int happiness;
 	private int energy;
 	private int hunger;
+	private int hygiene;
+	private int health;
 	private String color;
 	private ArrayList<String> specialTreats;
 	private String environment;
@@ -115,6 +117,22 @@ public class Pet {
 
 	public void setEnvironment(String environment) {
 		this.environment = environment;
+	}
+
+	public int getHygiene() {
+		return hygiene;
+	}
+
+	public void setHygiene(int hygiene) {
+		this.hygiene = hygiene;
+	}
+
+	public int getHealth() {
+		return health;
+	}
+
+	public void setHealth(int health) {
+		this.health = health;
 	}
 	
 	
