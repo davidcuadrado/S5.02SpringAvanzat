@@ -65,13 +65,6 @@ public class PetService {
 		});
 	}
 
-	/*
-	 * return gameId.flatMap(id -> gameRepository.findById(id).flatMap(game ->
-	 * playType.flatMap(type -> { switch (type.toLowerCase()) {
-	 * 
-	 * return monoPetId.flatMap(petId -> petRepository.findById(petId).flatMap(pet
-	 * -> petAction.flatMap(action -> { switch (action.toLowerCase())
-	 */
 
 	public Mono<Pet> nextPlayType(Mono<String> monoPetId, Mono<String> monoPetAction) {
 		return monoPetId.flatMap(id -> petRepository.findById(id).flatMap(pet -> monoPetAction.flatMap(petAction -> {
