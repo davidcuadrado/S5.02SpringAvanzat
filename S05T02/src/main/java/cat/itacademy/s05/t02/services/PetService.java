@@ -153,7 +153,7 @@ public class PetService {
 			pet.setHappiness(pet.getHappiness() + 5);
 			pet.setEnergy(Math.max(pet.getEnergy() - 5, 0));
 
-			if (random.nextDouble() < 0.15) { // 15% chance of environment being uncomfortable
+			if (random.nextDouble() < 0.15) {
 				pet.setHappiness(Math.max(pet.getHappiness() - 20, 0));
 				pet.setEnergy(Math.max(pet.getEnergy() - 10, 0));
 			}
@@ -168,7 +168,7 @@ public class PetService {
 			pet.setHappiness(pet.getHappiness() + 10);
 			pet.setEnergy(Math.max(pet.getEnergy() - 5, 0));
 
-			if (random.nextDouble() < 0.05) { // 5% chance of pet feeling anxious instead
+			if (random.nextDouble() < 0.05) {
 				pet.setCurrentMood(PetMood.ANXIOUS);
 				pet.setHappiness(Math.max(pet.getHappiness() - 15, 0));
 			}
@@ -183,7 +183,7 @@ public class PetService {
 			pet.setHappiness(pet.getHappiness() + 5);
 			pet.setHygiene(Math.max(pet.getHygiene() - 5, 0));
 
-			if (random.nextDouble() < 0.1) { // 10% chance accessory causes discomfort
+			if (random.nextDouble() < 0.1) {
 				pet.setHappiness(Math.max(pet.getHappiness() - 10, 0));
 			}
 
@@ -197,7 +197,7 @@ public class PetService {
 			pet.setHappiness(pet.getHappiness() + 5);
 			pet.setHunger(Math.min(pet.getHunger() + 10, 100));
 
-			if (random.nextDouble() < 0.05) { // 5% chance of bad dreams
+			if (random.nextDouble() < 0.05) {
 				pet.setHappiness(Math.max(pet.getHappiness() - 15, 0));
 				pet.setEnergy(Math.max(pet.getEnergy() - 10, 0));
 			}
@@ -212,7 +212,7 @@ public class PetService {
 			pet.setHappiness(pet.getHappiness() + 5);
 			pet.setEnergy(Math.max(pet.getEnergy() - 5, 0));
 
-			if (random.nextDouble() < 0.1) { // 10% chance of water being too cold
+			if (random.nextDouble() < 0.1) {
 				pet.setHappiness(Math.max(pet.getHappiness() - 10, 0));
 			}
 
@@ -229,7 +229,7 @@ public class PetService {
 			pet.setHappiness(pet.getHappiness() + 20);
 			pet.setHygiene(Math.max(pet.getHygiene() - 15, 0));
 
-			if (random.nextDouble() < 0.2) { // 20% chance of pet getting lost temporarily
+			if (random.nextDouble() < 0.2) {
 				pet.setHappiness(Math.max(pet.getHappiness() - 25, 0));
 				pet.setEnergy(Math.max(pet.getEnergy() - 20, 0));
 			}
@@ -241,11 +241,11 @@ public class PetService {
 	public Mono<Pet> checkAndRestoreHealth(Mono<String> petId) {
 		return petId.flatMap(id -> petRepository.findById(id).flatMap(pet -> {
 			if (pet.getHealth() < 50) {
-				pet.setHealth(100); // Restoring health fully
+				pet.setHealth(100);
 				pet.setHappiness(pet.getHappiness() + 10);
 				pet.setEnergy(Math.max(pet.getEnergy() - 10, 0));
 
-				if (random.nextDouble() < 0.05) { // 5% chance of unexpected side effect
+				if (random.nextDouble() < 0.05) {
 					pet.setHealth(Math.max(pet.getHealth() - 20, 0));
 					pet.setHappiness(Math.max(pet.getHappiness() - 15, 0));
 				}
@@ -261,7 +261,7 @@ public class PetService {
 			pet.setEnergy(Math.min(pet.getEnergy() + 10, 100));
 			pet.setHygiene(Math.max(pet.getHygiene() - 5, 0));
 
-			if (random.nextDouble() < 0.1) { // 10% chance of treat causing upset stomach
+			if (random.nextDouble() < 0.1) {
 				pet.setHappiness(Math.max(pet.getHappiness() - 15, 0));
 				pet.setHealth(Math.max(pet.getHealth() - 20, 0));
 			}
