@@ -2,7 +2,7 @@ package cat.itacademy.s05.t02.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,7 +20,7 @@ import reactor.core.publisher.Mono;
 public class ContentController {
 
 	@Autowired
-	private AuthenticationManager authenticationManager;
+	private ReactiveAuthenticationManager authenticationManager;
 	@Autowired
 	private JwtService jwtService;
 	@Autowired
@@ -41,18 +41,19 @@ public class ContentController {
 	@Operation(summary = "Verify authentication", description = "Endpoint for authenticate validation and token register.")
 	@PostMapping("/authenticate")
 	public Mono<ResponseEntity<String>> authenticateAndGetToken(@RequestBody LoginForm loginForm) {
-		return Mono
-				.fromCallable(() -> authenticationManager.authenticate(
-						new UsernamePasswordAuthenticationToken(loginForm.username(), loginForm.password())))
-				.flatMap(authentication -> {
-					if (authentication.isAuthenticated()) {
-						return myUserDetailService.findByUsername(loginForm.username())
-								.flatMap(userDetails -> jwtService.generateToken(Mono.just(userDetails)))
-								.map(token -> ResponseEntity.ok(token));
-					} else {
-						return Mono.error(new UsernameNotFoundException("Invalid credentials"));
-					}
-				}).onErrorResume(e -> Mono.just(ResponseEntity.status(401).body("Authentication failed")));
+	    return authenticationManager
+	            .authenticate(new UsernamePasswordAuthenticationToken(loginForm.username(), loginForm.password()))
+	            .flatMap(authentication -> {
+	                if (authentication.isAuthenticated()) {
+	                    return myUserDetailService.findByUsername(loginForm.username())
+	                            .flatMap(userDetails -> jwtService.generateToken(Mono.just(userDetails)))
+	                            .map(ResponseEntity::ok);
+	                } else {
+	                    return Mono.error(new UsernameNotFoundException("Invalid credentials"));
+	                }
+	            })
+	            .onErrorResume(e -> Mono.just(ResponseEntity.status(401).body("Authentication failed")));
 	}
+
 
 }
