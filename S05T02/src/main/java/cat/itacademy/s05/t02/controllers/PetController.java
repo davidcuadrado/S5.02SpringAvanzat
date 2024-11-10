@@ -23,7 +23,7 @@ public class PetController {
 
 	@Operation(summary = "Get all pets", description = "Retrieve all existing pets. ")
 	@GetMapping("/all")
-	public Flux<ResponseEntity<Pet>> getPets() {
+	public Flux<ResponseEntity<Pet>> getAllPets() {
 	    return petService.getAllPets()
 	            .map(pet -> ResponseEntity.ok(pet))
 	            .switchIfEmpty(Flux.just(ResponseEntity.status(HttpStatus.NOT_FOUND).build()));

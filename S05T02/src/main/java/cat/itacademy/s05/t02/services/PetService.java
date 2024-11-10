@@ -1,13 +1,12 @@
 package cat.itacademy.s05.t02.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import cat.itacademy.s05.t02.exceptions.DatabaseException;
 import cat.itacademy.s05.t02.exceptions.NotFoundException;
 import cat.itacademy.s05.t02.models.Pet;
+import cat.itacademy.s05.t02.models.PetMood;
 import cat.itacademy.s05.t02.repositories.PetRepository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -62,25 +61,76 @@ public class PetService {
 		});
 	}
 
-	public Mono<ResponseEntity<Pet>> updatePet(String petId, String petAction) {
-	    return petRepository.findById(petId)
-	        .flatMap(existingPet -> {
-	            switch (petAction.toLowerCase()) {
-	                case "play":
-	                    
-	                    break;
-	                case "feed":
-	                   
-	                    break;
-	                default:
-	                    return Mono.error(new IllegalArgumentException("Invalid action type."));
-	            }
-	            return petRepository.save(existingPet);
-	        })
-	        .map(updatedPet -> ResponseEntity.ok(updatedPet))
-	        .defaultIfEmpty(ResponseEntity.status(HttpStatus.NOT_FOUND).build())
-	        .onErrorResume(e -> Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null)));
+	/*
+	 * return gameId.flatMap(id -> gameRepository.findById(id).flatMap(game ->
+	 * playType.flatMap(type -> { switch (type.toLowerCase()) {
+	 * 
+	 * return monoPetId.flatMap(petId -> petRepository.findById(petId).flatMap(pet
+	 * -> petAction.flatMap(action -> { switch (action.toLowerCase())
+	 */
+
+	public Mono<Pet> nextPlayType(Mono<String> monoPetId, Mono<String> monoPetAction) {
+		return monoPetId.flatMap(id -> petRepository.findById(id).flatMap(pet -> monoPetAction.flatMap(petAction -> {
+			switch (petAction.toLowerCase()) {
+			case "feed":
+				return feedPet(monoPetId).then(petRepository.save(pet));
+
+			case "play":
+				return playWithPet(monoPetId).then(petRepository.save(pet));
+
+			case "environment":
+				return changeEnvironment(monoPetId, "requested environment").then(petRepository.save(pet));
+			case "cheer":
+				return cheerPet(monoPetId).then(petRepository.save(pet));
+
+			default:
+				return Mono.error(
+						new IllegalArgumentException("Invalid pet action. Try introducing a proper pet action."));
+			}
+		}))).switchIfEmpty(Mono.error(new NotFoundException("Pet not found.")));
 	}
 
+	public Mono<Pet> feedPet(Mono<String> petId) {
+		return petRepository.findById(petId).flatMap(pet -> {
+			pet.setHunger(Math.max(pet.getHunger() - 20, 0));
+			pet.setHappiness(pet.getHappiness() + 10);
+			return petRepository.save(pet);
+		}).switchIfEmpty(Mono.error(new NotFoundException("Pet not found")));
+	}
+
+	public Mono<Pet> playWithPet(Mono<String> petId) {
+		return petRepository.findById(petId).flatMap(pet -> {
+			if (pet.getEnergy() < 10) {
+				return Mono.error(new DatabaseException("Pet is too tired to play"));
+			}
+			pet.setEnergy(pet.getEnergy() - 10);
+			pet.setHappiness(pet.getHappiness() + 15);
+			return petRepository.save(pet);
+		}).switchIfEmpty(Mono.error(new NotFoundException("Pet not found")));
+	}
+
+	public Mono<Pet> changeEnvironment(Mono<String> petId, String environment) {
+		return petRepository.findById(petId).flatMap(pet -> {
+			pet.setEnvironment(environment);
+			pet.setHappiness(pet.getHappiness() + 5);
+			return petRepository.save(pet);
+		}).switchIfEmpty(Mono.error(new NotFoundException("Pet not found")));
+	}
+
+	public Mono<Pet> cheerPet(Mono<String> petId) {
+		return petRepository.findById(petId).flatMap(pet -> {
+			pet.setCurrentMood(PetMood.HAPPY);
+			pet.setHappiness(pet.getHappiness() + 10);
+			return petRepository.save(pet);
+		}).switchIfEmpty(Mono.error(new NotFoundException("Pet not found")));
+	}
+
+	public Mono<Pet> addAccessory(Mono<String> petId, Mono<String> accessory) {
+		return petId.flatMap(id -> petRepository.findById(id).flatMap(pet -> accessory.map(acc -> {
+			pet.getSpecialTreats().add(acc);
+			pet.setHappiness(pet.getHappiness() + 5);
+			return pet;
+		})).flatMap(petRepository::save)).switchIfEmpty(Mono.error(new NotFoundException("Pet not found")));
+	}
 
 }

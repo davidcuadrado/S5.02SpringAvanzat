@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -70,7 +69,7 @@ public class UserController {
 				});
 	}
 
-	@Operation(summary = "Get a pet from user", description = "Retrieve an specific pet from the user. ")
+	@Operation(summary = "Get a pet from a user", description = "Retrieve an specific pet from a user. ")
 	@GetMapping("/{id}")
 	public Mono<ResponseEntity<Pet>> getUserSpecificPet(@RequestHeader("Authorization") String authHeader,
 			@PathVariable("id") String petId) {
@@ -86,36 +85,37 @@ public class UserController {
 	public Mono<ResponseEntity<String>> deleteGame(@RequestHeader("Authorization") String authHeader,
 			@PathVariable("id") String petId) {
 		String jwt = authHeader.replace("Bearer ", "");
-		return jwtService.extractUserId(jwt)
-				.flatMap(userId -> petService.findPetById(Mono.just(petId)).flatMap(pet -> {
-					if (pet.getUserId().equals(userId)) {
-						return petService.deletePetById(Mono.just(petId)).then(Mono.just(ResponseEntity
-								.status(HttpStatus.NO_CONTENT).body("Pet " + petId + " deleted successfully")));
-					} else {
-						return Mono.just(ResponseEntity.status(HttpStatus.FORBIDDEN)
-								.body("You are not authorized to delete this pet."));
-					}
-				}).switchIfEmpty(Mono.error(new NotFoundException("Pet with ID: " + petId + " not found"))));
+		return jwtService.extractUserId(jwt).flatMap(userId -> petService.findPetById(Mono.just(petId)).flatMap(pet -> {
+			if (pet.getUserId().equals(userId)) {
+				return petService.deletePetById(Mono.just(petId)).then(Mono.just(
+						ResponseEntity.status(HttpStatus.NO_CONTENT).body("Pet " + petId + " deleted successfully")));
+			} else {
+				return Mono.just(
+						ResponseEntity.status(HttpStatus.FORBIDDEN).body("You are not authorized to delete this pet."));
+			}
+		}).switchIfEmpty(Mono.error(new NotFoundException("Pet with ID: " + petId + " not found"))))
+				.onErrorResume(e -> Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+						"An un expected error ocurred when trying to delete a pet. Check the data input before trying again. ")));
 	}
 
 	@Operation(summary = "Interact with a pet", description = "Interact with a pet using an specific action. ")
-	@PutMapping("/{id}/update")
-	public Mono<ResponseEntity<Pet>> updatePet(@RequestHeader("Authorization") String authHeader,
+	@PostMapping("/{id}/update")
+	public Mono<ResponseEntity<String>> updatePet(@RequestHeader("Authorization") String authHeader,
 			@PathVariable("id") String petId, @RequestBody String petAction) {
 		String jwt = authHeader.replace("Bearer ", "");
-		return jwtService.extractUserId(jwt)
-				.flatMap(userId -> petService.findPetById(Mono.just(petId)).flatMap(pet -> {
-					if (pet.getUserId().equals(userId)) {
-						return petService.updatePet(Mono.just(petId), Mono.just(petAction))
-							    .map(updatedPet -> ResponseEntity.ok(updatedPet))
-							    .defaultIfEmpty(ResponseEntity.status(HttpStatus.NOT_FOUND).build())
-							    .onErrorResume(e -> Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error processing the petition. ")));
+		return jwtService.extractUserId(jwt).flatMap(userId -> petService.findPetById(Mono.just(petId)).flatMap(pet -> {
+			if (pet.getUserId().equals(userId)) {
+				return petService.nextPlayType(Mono.just(petId), Mono.just(petAction))
+						.map(petUpdate -> ResponseEntity.status(HttpStatus.OK).body(pet.toString()));
+			} else {
+				return Mono.just(ResponseEntity.status(HttpStatus.FORBIDDEN)
+						.body("You are not authorized to interact with this pet."));
+			}
+		}).switchIfEmpty(
+				Mono.just(ResponseEntity.status(HttpStatus.NOT_FOUND).body("Pet with ID: " + petId + " not found"))))
+				.onErrorResume(e -> Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+						"An un expected error ocurred when trying to interact with a pet. Check the data input and trying again. ")));
 
-								
-					} else {
-						return Mono.just(ResponseEntity.status(HttpStatus.FORBIDDEN).body("You are no authorized to interact with this pet. "));
-					}
-				}).switchIfEmpty(Mono.error(new NotFoundException("Pet with ID: " + petId + " not found"))));
 	}
 
 }
