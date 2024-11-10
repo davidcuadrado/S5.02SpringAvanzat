@@ -36,6 +36,17 @@ public class JwtService {
 			});
 		});
 	}
+	
+	public Mono<String> validateAndExtractUsername(String token) {
+	    return isTokenValid(token)
+	        .flatMap(valid -> {
+	            if (valid) {
+	                return extractUsername(token);
+	            } else {
+	                return Mono.error(new IllegalArgumentException("Invalid JWT token"));
+	            }
+	        });
+	}
 
 	private SecretKey generateKey() {
 		byte[] decodedKey = Base64.getDecoder().decode(SECRET);

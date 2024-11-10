@@ -6,7 +6,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
-import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextImpl;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
@@ -19,42 +18,36 @@ import reactor.core.publisher.Mono;
 @Configuration
 public class JwtAuthenticationFilter implements WebFilter {
 
-	@Autowired
-	private JwtService jwtService;
+    @Autowired
+    private JwtService jwtService;
 
-	@Autowired
-	private MyUserDetailService myUserDetailService;
+    @Autowired
+    private MyUserDetailService userDetailService;
 
-	
-	public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
-	    String authHeader = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
+    @Override
+    public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
+        String token = extractToken(exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION));
 
-	    if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-	        return chain.filter(exchange);
-	    }
-
-	    String jwt = authHeader.substring(7);
-
-	    return jwtService.extractUsername(jwt)
-	        .flatMap(username -> {
-	            if (username == null) {
-	                return chain.filter(exchange);
-	            }
-	            return myUserDetailService.findByUsername(username)
-	                .flatMap(userDetails -> {
-	                    UsernamePasswordAuthenticationToken authentication = 
-	                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-
-	                    SecurityContext context = new SecurityContextImpl(authentication);
-	                    return ((Mono<Void>) ReactiveSecurityContextHolder.withSecurityContext(Mono.just(context)))
-	                        .then(chain.filter(exchange));
-	                });
-	        })
-	        .onErrorResume(e -> {
-	            exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
-	            return exchange.getResponse().setComplete();
-	        });
-	}
+        return Mono.justOrEmpty(token)
+            .flatMap(jwtService::validateAndExtractUsername)
+            .flatMap(userDetailService::findByUsername)
+            .map(userDetails -> new UsernamePasswordAuthenticationToken(
+                    userDetails, null, userDetails.getAuthorities()))
+            .map(auth -> new SecurityContextImpl(auth))
+            .flatMap(securityContext -> 
+                chain.filter(exchange)
+                    .contextWrite(ReactiveSecurityContextHolder.withSecurityContext(Mono.just(securityContext))))
+            .onErrorResume(e -> {
+                exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+                return exchange.getResponse().setComplete();
+            });
+    }
 
 
+    private String extractToken(String header) {
+        if (header == null || !header.startsWith("Bearer ")) {
+            return null;
+        }
+        return header.substring(7);
+    }
 }
