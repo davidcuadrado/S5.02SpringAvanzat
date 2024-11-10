@@ -1,6 +1,7 @@
 package cat.itacademy.s05.t02.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Primary;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.ReactiveUserDetailsService;
@@ -12,6 +13,7 @@ import cat.itacademy.s05.t02.models.MyUser;
 import reactor.core.publisher.Mono;
 
 @Service
+@Primary
 public class MyUserDetailService implements ReactiveUserDetailsService {
 
 	@Autowired
