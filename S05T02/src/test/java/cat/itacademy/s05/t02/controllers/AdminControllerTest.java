@@ -127,7 +127,7 @@ public class AdminControllerTest {
         when(petService.findPetById(any(Mono.class))).thenReturn(Mono.just(pet));
         when(petService.nextPetAction(any(Mono.class), any(Mono.class))).thenReturn(Mono.just("Updated"));
 
-        Mono<ResponseEntity<String>> response = adminController.updatePet(petId, petAction).log();
+        Mono<ResponseEntity<String>> response = adminController.updatePet(petId, petAction);
 
         StepVerifier.create(response)
                 .expectNextMatches(resp -> resp.getStatusCode() == HttpStatus.OK && resp.getBody().contains(pet.toString()))
