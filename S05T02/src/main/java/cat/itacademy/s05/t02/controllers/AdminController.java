@@ -88,7 +88,7 @@ public class AdminController {
 	@PostMapping("/{id}/update")
 	public Mono<ResponseEntity<String>> updatePet(@PathVariable("id") String petId, @RequestBody String petAction) {
 		return petService.findPetById(Mono.just(petId))
-				.flatMap(pet -> petService.nextPlayType(Mono.just(petId), Mono.just(petAction))
+				.flatMap(pet -> petService.nextPetAction(Mono.just(petId), Mono.just(petAction))
 						.map(petUpdate -> ResponseEntity.status(HttpStatus.OK).body(pet.toString()))
 						.switchIfEmpty(Mono.just(ResponseEntity.status(HttpStatus.NOT_FOUND)
 								.body("Pet with ID: " + petId + " not found"))))

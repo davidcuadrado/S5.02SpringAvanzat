@@ -105,7 +105,7 @@ public class UserController {
 		String jwt = authHeader.replace("Bearer ", "");
 		return jwtService.extractUserId(jwt).flatMap(userId -> petService.findPetById(Mono.just(petId)).flatMap(pet -> {
 			if (pet.getUserId().equals(userId)) {
-				return petService.nextPlayType(Mono.just(petId), Mono.just(petAction))
+				return petService.nextPetAction(Mono.just(petId), Mono.just(petAction))
 						.map(petUpdate -> ResponseEntity.status(HttpStatus.OK).body(pet.toString()));
 			} else {
 				return Mono.just(ResponseEntity.status(HttpStatus.FORBIDDEN)

@@ -38,7 +38,6 @@ public class AdminControllerTest {
 
     @BeforeEach
     void setUp() {
-        adminController = new AdminController();
     }
 
     @Test
@@ -73,7 +72,8 @@ public class AdminControllerTest {
         Pet pet1 = new Pet("pet1Name", userId);
         Pet pet2 = new Pet("pet2Name", userId);
 
-        when(petService.getPetsByUserId(Mono.just(userId))).thenReturn(Flux.just(pet1, pet2));
+        when(petService.getPetsByUserId(any(Mono.class))).thenReturn(Flux.just(pet1, pet2));
+
 
         Mono<ResponseEntity<Flux<Pet>>> response = adminController.getUserPets(userId);
 
@@ -88,9 +88,11 @@ public class AdminControllerTest {
     @Test
     void getUserSpecificPet_ShouldReturnPet() {
         String petId = "456";
-        Pet pet = new Pet(petId, "userId");
+        String userId = "123";
+        Pet pet = new Pet(petId, userId);
 
-        when(petService.findPetById(Mono.just(petId))).thenReturn(Mono.just(pet));
+        when(petService.findPetById(any(Mono.class))).thenReturn(Mono.just(pet));
+
 
         Mono<ResponseEntity<Pet>> response = adminController.getUserSpecificPet(petId);
 
@@ -102,10 +104,12 @@ public class AdminControllerTest {
     @Test
     void deletePet_ShouldDeletePetSuccessfully() {
     	String petId = "456";
-        Pet pet = new Pet(petId, "userId");
+        String userId = "123";
+        Pet pet = new Pet(petId, userId);
+        
+        when(petService.findPetById(any(Mono.class))).thenReturn(Mono.just(pet));
+        when(petService.deletePetById(any(Mono.class))).thenReturn(Mono.empty());
 
-        when(petService.findPetById(Mono.just(petId))).thenReturn(Mono.just(pet));
-        when(petService.deletePetById(Mono.just(petId))).thenReturn(Mono.empty());
 
         Mono<ResponseEntity<String>> response = adminController.deleteGame(petId);
 
@@ -120,13 +124,14 @@ public class AdminControllerTest {
         String petAction = "play";
         Pet pet = new Pet(petId, petAction);
 
-        when(petService.findPetById(Mono.just(petId))).thenReturn(Mono.just(pet));
-        when(petService.nextPlayType(any(Mono.class), any(Mono.class))).thenReturn(Mono.just("Updated"));
+        when(petService.findPetById(any(Mono.class))).thenReturn(Mono.just(pet));
+        when(petService.nextPetAction(any(Mono.class), any(Mono.class))).thenReturn(Mono.just("Updated"));
 
-        Mono<ResponseEntity<String>> response = adminController.updatePet(petId, petAction);
+        Mono<ResponseEntity<String>> response = adminController.updatePet(petId, petAction).log();
 
         StepVerifier.create(response)
                 .expectNextMatches(resp -> resp.getStatusCode() == HttpStatus.OK && resp.getBody().contains(pet.toString()))
                 .verifyComplete();
     }
+
 }

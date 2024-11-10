@@ -66,7 +66,7 @@ public class PetService {
 	}
 
 
-	public Mono<Pet> nextPlayType(Mono<String> monoPetId, Mono<String> monoPetAction) {
+	public Mono<Pet> nextPetAction(Mono<String> monoPetId, Mono<String> monoPetAction) {
 		return monoPetId.flatMap(id -> petRepository.findById(id).flatMap(pet -> monoPetAction.flatMap(petAction -> {
 			switch (petAction.toLowerCase()) {
 			case "feed":
