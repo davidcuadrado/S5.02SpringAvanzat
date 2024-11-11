@@ -51,20 +51,16 @@ class AuthenticationSuccessHandlerTest {
 
     @Test
     void onAuthenticationSuccess_withAdminRole_redirectsToAdminHome() {
-        // Configuración del rol ADMIN
         GrantedAuthority adminAuthority = mock(GrantedAuthority.class);
         when(adminAuthority.getAuthority()).thenReturn("ROLE_ADMIN");
         when(authentication.getAuthorities()).thenReturn(Collections.singletonList(adminAuthority));
         
-        // Simulación de respuesta
         when(response.setStatusCode(HttpStatus.FOUND)).thenReturn(null);
         when(response.getHeaders().setLocation(any(URI.class))).thenReturn(null);
         when(response.setComplete()).thenReturn(Mono.empty());
 
-        // Ejecución del método
         Mono<Void> result = authenticationSuccessHandler.onAuthenticationSuccess(webFilterExchange, authentication);
 
-        // Verificación del resultado
         StepVerifier.create(result)
             .verifyComplete();
 

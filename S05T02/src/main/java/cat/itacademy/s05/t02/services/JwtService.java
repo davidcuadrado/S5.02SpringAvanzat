@@ -36,16 +36,15 @@ public class JwtService {
 			});
 		});
 	}
-	
+
 	public Mono<String> validateAndExtractUsername(String token) {
-	    return isTokenValid(token)
-	        .flatMap(valid -> {
-	            if (valid) {
-	                return extractUsername(token);
-	            } else {
-	                return Mono.error(new IllegalArgumentException("Invalid JWT token"));
-	            }
-	        });
+		return isTokenValid(token).flatMap(valid -> {
+			if (valid) {
+				return extractUsername(token);
+			} else {
+				return Mono.error(new IllegalArgumentException("Invalid JWT token"));
+			}
+		});
 	}
 
 	private SecretKey generateKey() {
@@ -56,10 +55,11 @@ public class JwtService {
 	public Mono<String> extractUsername(String jwt) {
 		return Mono.fromCallable(() -> getClaims(jwt).getSubject());
 	}
-	
+
 	public Mono<String> extractUserId(String jwt) {
-        return Mono.fromCallable(() -> getClaims(jwt).get("userId", String.class));
-    }
+		return Mono.fromCallable(() -> getClaims(jwt).get("userId", String.class))
+				.flatMap(userId -> userId != null ? Mono.just(userId) : Mono.empty());
+	}
 
 	private Claims getClaims(String jwt) {
 		return Jwts.parser().verifyWith(generateKey()).build().parseSignedClaims(jwt).getPayload();

@@ -42,7 +42,8 @@ public class PetService {
 	}
 
 	public Flux<Pet> getPetsByUserId(Mono<String> monoUserId) {
-		return monoUserId.flatMapMany(id -> petRepository.findAllByUserId(id)).switchIfEmpty(Flux.empty());
+		return monoUserId.flatMapMany(id -> petRepository.findAllByUserId(id))
+				.switchIfEmpty(Mono.error(new NotFoundException("No pets found for that user.")));
 	}
 
 	public Flux<Pet> getAllPets() {
@@ -53,7 +54,7 @@ public class PetService {
 
 	public Mono<Pet> deletePetById(Mono<String> monoPetId) {
 		return monoPetId.flatMap(id -> petRepository.findById(id))
-				.switchIfEmpty(Mono.error(new NotFoundException("Game ID: " + monoPetId + " not found.")))
+				.switchIfEmpty(Mono.error(new NotFoundException("Pet ID: " + monoPetId + " not found.")))
 				.flatMap(existingGame -> petRepository.delete(existingGame).then(Mono.just(existingGame)));
 	}
 
@@ -64,7 +65,6 @@ public class PetService {
 			return petRepository.findByUserIdAndPetId(userId, petId);
 		});
 	}
-
 
 	public Mono<Pet> nextPetAction(Mono<String> monoPetId, Mono<String> monoPetAction) {
 		return monoPetId.flatMap(id -> petRepository.findById(id).flatMap(pet -> monoPetAction.flatMap(petAction -> {

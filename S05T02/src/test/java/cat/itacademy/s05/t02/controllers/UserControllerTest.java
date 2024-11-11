@@ -88,6 +88,7 @@ class UserControllerTest {
             .verifyComplete();
     }
 
+
     @Test
     void getUserSpecificPet_withExistingPet_returnsPet() {
         String authHeader = "Bearer validToken";
@@ -127,9 +128,9 @@ class UserControllerTest {
     void updatePet_withAuthorizedUser_updatesPet() {
         String authHeader = "Bearer validToken";
         String petId = "123";
-        String userId = "123";
+        String userId = "345";
         String petAction = "play";
-        Pet pet = new Pet("Fluffy", userId);
+        Pet pet = new Pet("testPetName", userId);
 
         when(jwtService.extractUserId(any())).thenReturn(Mono.just(userId));
         when(petService.findPetById(Mono.just(petId))).thenReturn(Mono.just(pet));
