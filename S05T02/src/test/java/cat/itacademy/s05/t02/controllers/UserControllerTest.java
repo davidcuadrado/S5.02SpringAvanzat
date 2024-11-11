@@ -105,13 +105,8 @@ class UserControllerTest {
 	    String userId = "123";
 	    Pet pet = new Pet("testPet", userId);
 
-	    // Mock jwtService to extract userId
 	    when(jwtService.extractUserId(any())).thenReturn(Mono.just(userId));
-	    
-	    // Mock findPetById to return the Pet object with a matching userId
 	    when(petService.findPetById(any())).thenReturn(Mono.just(pet));
-	    
-	    // Mock deletePetById to return Mono.empty() indicating successful deletion
 	    when(petService.deletePetById(any())).thenReturn(Mono.empty());
 
 	    Mono<ResponseEntity<String>> result = userController.deletePet(authHeader, petId);
@@ -147,7 +142,7 @@ class UserControllerTest {
 		String userId = "123";
 		String unauthorizedUserId = "456";
 		String petAction = "play";
-		Pet pet = new Pet("Fluffy", unauthorizedUserId);
+		Pet pet = new Pet("testPetName", unauthorizedUserId);
 
 		when(jwtService.extractUserId(any())).thenReturn(Mono.just(userId));
 		when(petService.findPetById(Mono.just(petId))).thenReturn(Mono.just(pet));

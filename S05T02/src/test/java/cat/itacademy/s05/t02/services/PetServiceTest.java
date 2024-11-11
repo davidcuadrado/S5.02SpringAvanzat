@@ -1,7 +1,6 @@
 package cat.itacademy.s05.t02.services;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -34,7 +33,7 @@ class PetServiceTest {
 
 	@Test
 	void createNewPet_withValidData_savesPetSuccessfully() {
-		String petName = "Fluffy";
+		String petName = "testPetName";
 		String userId = "123";
 		Pet newPet = new Pet(petName, userId);
 
@@ -47,7 +46,7 @@ class PetServiceTest {
 
 	@Test
 	void createNewPet_withDatabaseError_throwsDatabaseException() {
-		String petName = "Fluffy";
+		String petName = "testPetName";
 		String userId = "123";
 
 		when(petRepository.save(any(Pet.class))).thenReturn(Mono.error(new RuntimeException("Database error")));
@@ -60,7 +59,7 @@ class PetServiceTest {
 	@Test
 	void findPetById_withExistingPet_returnsPet() {
 		String petId = "123";
-		Pet pet = new Pet("Fluffy", "user123");
+		Pet pet = new Pet("testPetName", "user123");
 
 		when(petRepository.findById(petId)).thenReturn(Mono.just(pet));
 
@@ -100,8 +99,8 @@ class PetServiceTest {
 	@Test
 	void playWithPet_withInsufficientEnergy_throwsPetActionException() {
 		String petId = "123";
-		Pet pet = new Pet("Fluffy", "user123");
-		pet.setEnergy(5); // Insufficient energy for play
+		Pet pet = new Pet("testPetName", "user123");
+		pet.setEnergy(5);
 
 		when(petRepository.findById(petId)).thenReturn(Mono.just(pet));
 
@@ -137,7 +136,7 @@ class PetServiceTest {
 	@Test
 	void deletePetById_withExistingPet_deletesPetSuccessfully() {
 		String petId = "123";
-		Pet pet = new Pet("Fluffy", "user123");
+		Pet pet = new Pet("testPetName", "user123");
 
 		when(petRepository.findById(petId)).thenReturn(Mono.just(pet));
 		when(petRepository.delete(pet)).thenReturn(Mono.empty());

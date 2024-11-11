@@ -1,18 +1,20 @@
 package cat.itacademy.s05.t02.config;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.*;
 
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.security.core.Authentication;
@@ -22,70 +24,91 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-import java.util.Collections;
-
 class AuthenticationSuccessHandlerTest {
 
-    @InjectMocks
-    private AuthenticationSuccessHandler authenticationSuccessHandler;
+	@InjectMocks
+	private AuthenticationSuccessHandler authenticationSuccessHandler;
 
-    @Mock
-    private WebFilterExchange webFilterExchange;
+	@Mock
+	private WebFilterExchange webFilterExchange;
 
-    @Mock
-    private Authentication authentication;
+	@Mock
+	private Authentication authentication;
 
-    @Mock
-    private ServerWebExchange serverWebExchange;
+	@Mock
+	private ServerWebExchange serverWebExchange;
 
-    @Mock
-    private ServerHttpResponse response;
+	@Mock
+	private ServerHttpResponse response;
 
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
+	@BeforeEach
+	void setUp() {
+		MockitoAnnotations.openMocks(this);
+		when(webFilterExchange.getExchange()).thenReturn(serverWebExchange);
+		when(serverWebExchange.getResponse()).thenReturn(response);
+	}
 
-        when(webFilterExchange.getExchange()).thenReturn(serverWebExchange);
-        when(serverWebExchange.getResponse()).thenReturn(response);
-    }
+	@Test
+	void onAuthenticationSuccess_withAdminRole_redirectsToAdminHome() {
+	    GrantedAuthority adminAuthority = mock(GrantedAuthority.class);
+	    when(adminAuthority.getAuthority()).thenReturn("ROLE_ADMIN");
 
-    @Test
-    void onAuthenticationSuccess_withAdminRole_redirectsToAdminHome() {
-        GrantedAuthority adminAuthority = mock(GrantedAuthority.class);
-        when(adminAuthority.getAuthority()).thenReturn("ROLE_ADMIN");
-        when(authentication.getAuthorities()).thenReturn(Collections.singletonList(adminAuthority));
-        
-        when(response.setStatusCode(HttpStatus.FOUND)).thenReturn(null);
-        when(response.getHeaders().setLocation(any(URI.class))).thenReturn(null);
-        when(response.setComplete()).thenReturn(Mono.empty());
+	    // Use thenAnswer to dynamically return a Collection with adminAuthority
+	    when(authentication.getAuthorities()).thenAnswer(invocation -> Collections.singletonList(adminAuthority));
 
-        Mono<Void> result = authenticationSuccessHandler.onAuthenticationSuccess(webFilterExchange, authentication);
+	    // Mock headers and response behavior
+	    HttpHeaders headers = new HttpHeaders();
+	    when(response.getHeaders()).thenReturn(headers);
+	    when(response.setComplete()).thenReturn(Mono.empty());
 
-        StepVerifier.create(result)
-            .verifyComplete();
+	    // Execute the method under test
+	    Mono<Void> result = authenticationSuccessHandler.onAuthenticationSuccess(webFilterExchange, authentication);
 
-        verify(response, times(1)).setStatusCode(HttpStatus.FOUND);
-        verify(response.getHeaders(), times(1)).setLocation(URI.create("/admin/home"));
-        verify(response, times(1)).setComplete();
-    }
+	    // Verify the result and interactions
+	    StepVerifier.create(result).verifyComplete();
 
-    @Test
-    void onAuthenticationSuccess_withUserRole_redirectsToUserHome() {
-        GrantedAuthority userAuthority = mock(GrantedAuthority.class);
-        when(userAuthority.getAuthority()).thenReturn("ROLE_USER");
-        when(authentication.getAuthorities()).thenReturn(Collections.singletonList(userAuthority));
-        
-        when(response.setStatusCode(HttpStatus.FOUND)).thenReturn(null);
-        when(response.getHeaders().setLocation(any(URI.class))).thenReturn(null);
-        when(response.setComplete()).thenReturn(Mono.empty());
+	    // Verify that the response was correctly set to redirect to "/admin/home"
+	    verify(response).setStatusCode(HttpStatus.FOUND);
+	    assertEquals(URI.create("/admin/home"), headers.getLocation()); // Verify the location header
+	    verify(response).setComplete();
+	}
 
-        Mono<Void> result = authenticationSuccessHandler.onAuthenticationSuccess(webFilterExchange, authentication);
 
-        StepVerifier.create(result)
-            .verifyComplete();
+	@Test
+	void onAuthenticationSuccess_withUserRole_redirectsToUserHome() {
+		GrantedAuthority userAuthority = mock(GrantedAuthority.class);
+		when(userAuthority.getAuthority()).thenReturn("ROLE_USER");
 
-        verify(response, times(1)).setStatusCode(HttpStatus.FOUND);
-        verify(response.getHeaders(), times(1)).setLocation(URI.create("/user/home"));
-        verify(response, times(1)).setComplete();
-    }
+		// Use thenAnswer to return a Collection with the userAuthority
+		when(authentication.getAuthorities()).thenAnswer(invocation -> Collections.singletonList(userAuthority));
+
+		// Mock the headers and response behavior
+		HttpHeaders headers = new HttpHeaders();
+		when(response.getHeaders()).thenReturn(headers);
+		when(response.setComplete()).thenReturn(Mono.empty());
+
+		Mono<Void> result = authenticationSuccessHandler.onAuthenticationSuccess(webFilterExchange, authentication);
+
+		StepVerifier.create(result).verifyComplete();
+
+		// Directly verify calls without doNothing
+		verify(response).setStatusCode(HttpStatus.FOUND);
+		assertEquals(URI.create("/user/home"), headers.getLocation()); // Verify that the location header was set
+																		// correctly
+		verify(response).setComplete();
+	}
+
+	@Test
+	void setRedirectResponse_setsStatusAndLocation() {
+		String redirectUrl = "/user/home";
+		HttpHeaders headers = new HttpHeaders();
+
+		when(response.getHeaders()).thenReturn(headers);
+
+		authenticationSuccessHandler.setRedirectResponse(serverWebExchange, redirectUrl);
+
+		verify(response).setStatusCode(HttpStatus.FOUND);
+		assertEquals(URI.create(redirectUrl), headers.getLocation());
+	}
+
 }
