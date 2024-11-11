@@ -23,143 +23,139 @@ import cat.itacademy.s05.t02.services.UserService;
 
 class UserControllerTest {
 
-    @InjectMocks
-    private UserController userController;
+	@InjectMocks
+	private UserController userController;
 
-    @Mock
-    private UserService userService;
+	@Mock
+	private UserService userService;
 
-    @Mock
-    private PetService petService;
+	@Mock
+	private PetService petService;
 
-    @Mock
-    private JwtService jwtService;
+	@Mock
+	private JwtService jwtService;
 
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-    }
+	@BeforeEach
+	void setUp() {
+		MockitoAnnotations.openMocks(this);
+	}
 
-    @Test
-    void handleUserWelcome_returnsWelcomeMessage() {
-        Mono<ResponseEntity<String>> result = userController.handleUserWelcome();
+	@Test
+	void handleUserWelcome_returnsWelcomeMessage() {
+		Mono<ResponseEntity<String>> result = userController.handleUserWelcome();
 
-        StepVerifier.create(result)
-            .expectNext(ResponseEntity.ok("You are now logged in, welcome!"))
-            .verifyComplete();
-    }
+		StepVerifier.create(result).expectNext(ResponseEntity.ok("You are now logged in, welcome!")).verifyComplete();
+	}
 
-    @Test
-    void createNewPet_ShouldReturnCreatedPet() {
-        String authHeader = "Bearer testToken";
-        String newPetName = "testNewPetName";
-        String userId = "123";
-        Pet pet = new Pet(newPetName, userId);
+	@Test
+	void createNewPet_ShouldReturnCreatedPet() {
+		String authHeader = "Bearer testToken";
+		String newPetName = "testNewPetName";
+		String userId = "123";
+		Pet pet = new Pet(newPetName, userId);
 
-        when(jwtService.extractUserId("testToken")).thenReturn(Mono.just(userId));
-        when(userService.createNewPet(any(Mono.class), any(Mono.class))).thenReturn(Mono.just(pet));
+		when(jwtService.extractUserId("testToken")).thenReturn(Mono.just(userId));
+		when(userService.createNewPet(any(Mono.class), any(Mono.class))).thenReturn(Mono.just(pet));
 
-        Mono<ResponseEntity<Pet>> response = userController.createNewPet(authHeader, newPetName);
+		Mono<ResponseEntity<Pet>> response = userController.createNewPet(authHeader, newPetName);
 
-        StepVerifier.create(response)
-                .expectNextMatches(resp -> resp.getStatusCode() == HttpStatus.CREATED && resp.getBody().equals(pet))
-                .verifyComplete();
-    }
+		StepVerifier.create(response)
+				.expectNextMatches(resp -> resp.getStatusCode() == HttpStatus.CREATED && resp.getBody().equals(pet))
+				.verifyComplete();
+	}
 
-    @Test
-    void getUserPets_withExistingPets_returnsPets() {
-        String authHeader = "Bearer validToken";
-        String userId = "123";
-        Pet pet1 = new Pet("pet1Name", userId);
-        Pet pet2 = new Pet("pet2Name", userId);
+	@Test
+	void getUserPets_withExistingPets_returnsPets() {
+		String authHeader = "Bearer validToken";
+		String userId = "123";
+		Pet pet1 = new Pet("pet1Name", userId);
+		Pet pet2 = new Pet("pet2Name", userId);
 
-        when(jwtService.extractUserId(any())).thenReturn(Mono.just(userId));
-        when(petService.getPetsByUserId(Mono.just(userId))).thenReturn(Flux.just(pet1, pet2));
+		when(jwtService.extractUserId(any())).thenReturn(Mono.just(userId));
 
-        Mono<ResponseEntity<Flux<Pet>>> result = userController.getUserPets(authHeader);
+		when(petService.getPetsByUserId(any())).thenReturn(Flux.just(pet1, pet2));
 
-        StepVerifier.create(result)
-            .assertNext(response -> {
-                assertEquals(HttpStatus.OK, response.getStatusCode());
-                StepVerifier.create(response.getBody())
-                    .expectNext(pet1, pet2)
-                    .verifyComplete();
-            })
-            .verifyComplete();
-    }
+		Mono<ResponseEntity<Flux<Pet>>> result = userController.getUserPets(authHeader);
+
+		StepVerifier.create(result).assertNext(response -> {
+			assertEquals(HttpStatus.OK, response.getStatusCode());
+			StepVerifier.create(response.getBody()).expectNext(pet1, pet2).verifyComplete();
+		}).verifyComplete();
+	}
+
+	@Test
+	void getUserSpecificPet_withExistingPet_returnsPet() {
+		String authHeader = "Bearer validToken";
+		String petId = "123";
+		String userId = "123";
+		Pet pet = new Pet("pet1Name", userId);
+
+		when(jwtService.extractUserId(any())).thenReturn(Mono.just(userId));
+		when(petService.getPetByUserIdAndPetId(any(), any())).thenReturn(Mono.just(pet));
+
+		Mono<ResponseEntity<Pet>> result = userController.getUserSpecificPet(authHeader, petId);
+
+		StepVerifier.create(result).expectNext(ResponseEntity.ok(pet)).verifyComplete();
+	}
+	
+	@Test
+	void deletePet_withAuthorizedUser_deletesPet() {
+	    String authHeader = "Bearer validToken";
+	    String petId = "123";
+	    String userId = "123";
+	    Pet pet = new Pet("testPet", userId);
+
+	    // Mock jwtService to extract userId
+	    when(jwtService.extractUserId(any())).thenReturn(Mono.just(userId));
+	    
+	    // Mock findPetById to return the Pet object with a matching userId
+	    when(petService.findPetById(any())).thenReturn(Mono.just(pet));
+	    
+	    // Mock deletePetById to return Mono.empty() indicating successful deletion
+	    when(petService.deletePetById(any())).thenReturn(Mono.empty());
+
+	    Mono<ResponseEntity<String>> result = userController.deletePet(authHeader, petId);
+
+	    StepVerifier.create(result)
+	        .expectNext(ResponseEntity.status(HttpStatus.NO_CONTENT).body("Pet " + petId + " deleted successfully. "))
+	        .verifyComplete();
+	}
 
 
-    @Test
-    void getUserSpecificPet_withExistingPet_returnsPet() {
-        String authHeader = "Bearer validToken";
-        String petId = "123";
-        String userId = "123";
-        Pet pet = new Pet("pet1Name", userId);
+	@Test
+	void updatePet_withAuthorizedUser_updatesPet() {
+		String authHeader = "Bearer validToken";
+		String petId = "123";
+		String userId = "345";
+		String petAction = "play";
+		Pet pet = new Pet("testPetName", userId);
 
-        when(jwtService.extractUserId(any())).thenReturn(Mono.just(userId));
-        when(petService.getPetByUserIdAndPetId(Mono.just(userId), Mono.just(petId))).thenReturn(Mono.just(pet));
+		when(jwtService.extractUserId(any())).thenReturn(Mono.just(userId));
+		when(petService.findPetById(any())).thenReturn(Mono.just(pet));
+		when(petService.nextPetAction(any(), any())).thenReturn(Mono.just(pet));
 
-        Mono<ResponseEntity<Pet>> result = userController.getUserSpecificPet(authHeader, petId);
+		Mono<ResponseEntity<String>> result = userController.updatePet(authHeader, petId, petAction);
 
-        StepVerifier.create(result)
-            .expectNext(ResponseEntity.ok(pet))
-            .verifyComplete();
-    }
+		StepVerifier.create(result).expectNext(ResponseEntity.status(HttpStatus.OK).body(pet.toString()))
+				.verifyComplete();
+	}
 
-    @Test
-    void deleteGame_withAuthorizedUser_deletesPet() {
-        String authHeader = "Bearer validToken";
-        String petId = "123";
-        String userId = "123";
-        Pet pet = new Pet("Fluffy", userId);
+	@Test
+	void updatePet_withUnauthorizedUser_returnsForbidden() {
+		String authHeader = "Bearer validToken";
+		String petId = "123";
+		String userId = "123";
+		String unauthorizedUserId = "456";
+		String petAction = "play";
+		Pet pet = new Pet("Fluffy", unauthorizedUserId);
 
-        when(jwtService.extractUserId(any())).thenReturn(Mono.just(userId));
-        when(petService.findPetById(Mono.just(petId))).thenReturn(Mono.just(pet));
-        when(petService.deletePetById(Mono.just(petId))).thenReturn(Mono.empty());
+		when(jwtService.extractUserId(any())).thenReturn(Mono.just(userId));
+		when(petService.findPetById(Mono.just(petId))).thenReturn(Mono.just(pet));
 
-        Mono<ResponseEntity<String>> result = userController.deleteGame(authHeader, petId);
+		Mono<ResponseEntity<String>> result = userController.updatePet(authHeader, petId, petAction);
 
-        StepVerifier.create(result)
-            .expectNext(ResponseEntity.status(HttpStatus.NO_CONTENT).body("Pet " + petId + " deleted successfully"))
-            .verifyComplete();
-    }
-
-    @Test
-    void updatePet_withAuthorizedUser_updatesPet() {
-        String authHeader = "Bearer validToken";
-        String petId = "123";
-        String userId = "345";
-        String petAction = "play";
-        Pet pet = new Pet("testPetName", userId);
-
-        when(jwtService.extractUserId(any())).thenReturn(Mono.just(userId));
-        when(petService.findPetById(Mono.just(petId))).thenReturn(Mono.just(pet));
-        when(petService.nextPetAction(Mono.just(petId), Mono.just(petAction))).thenReturn(Mono.just(pet));
-
-        Mono<ResponseEntity<String>> result = userController.updatePet(authHeader, petId, petAction);
-
-        StepVerifier.create(result)
-            .expectNext(ResponseEntity.status(HttpStatus.OK).body(pet.toString()))
-            .verifyComplete();
-    }
-
-    @Test
-    void updatePet_withUnauthorizedUser_returnsForbidden() {
-        String authHeader = "Bearer validToken";
-        String petId = "123";
-        String userId = "123";
-        String unauthorizedUserId = "456";
-        String petAction = "play";
-        Pet pet = new Pet("Fluffy", unauthorizedUserId);
-
-        when(jwtService.extractUserId(any())).thenReturn(Mono.just(userId));
-        when(petService.findPetById(Mono.just(petId))).thenReturn(Mono.just(pet));
-
-        Mono<ResponseEntity<String>> result = userController.updatePet(authHeader, petId, petAction);
-
-        StepVerifier.create(result)
-            .expectNext(ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .body("You are not authorized to interact with this pet."))
-            .verifyComplete();
-    }
+		StepVerifier.create(result).expectNext(
+				ResponseEntity.status(HttpStatus.FORBIDDEN).body("You are not authorized to interact with this pet."))
+				.verifyComplete();
+	}
 }

@@ -1,42 +1,101 @@
 package cat.itacademy.s05.t02.config;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-
-import java.util.ArrayList;
-import java.util.List;
-
+import io.swagger.v3.oas.models.Components;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.security.SecurityScheme;
+import io.swagger.v3.oas.models.tags.Tag;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.MockitoAnnotations;
 import org.springdoc.core.models.GroupedOpenApi;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.List;
+
 class SwaggerConfigurationTest {
 
-    @InjectMocks
-    private SwaggerConfiguration swaggerConfiguration;
+	@InjectMocks
+	private SwaggerConfiguration swaggerConfiguration;
 
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-    }
+	@BeforeEach
+	void setUp() {
+		MockitoAnnotations.openMocks(this);
+	}
 
-    @Test
-    void api_returnsGroupedOpenApiBean() {
-        GroupedOpenApi groupedOpenApi = swaggerConfiguration.api();
+	@Test
+	void testCustomOpenAPI() {
+		OpenAPI openAPI = swaggerConfiguration.customOpenAPI();
 
-        assertNotNull(groupedOpenApi, "El bean GroupedOpenApi no debería ser nulo");
+		assertNotNull(openAPI);
+		assertNotNull(openAPI.getInfo());
+		assertEquals("The Pet API", openAPI.getInfo().getTitle());
+		assertEquals("API for managing users and pets.", openAPI.getInfo().getDescription().trim());
+		assertEquals("v1.0", openAPI.getInfo().getVersion());
 
-        assertEquals("pet-api", groupedOpenApi.getGroup(), "El grupo debería llamarse 'pet-api'");
+		// Verify contact information
+		assertEquals("David Cuadrado", openAPI.getInfo().getContact().getName());
+		assertEquals("dav.cuadrado@gmail.com", openAPI.getInfo().getContact().getEmail());
 
-        String[] pathsToMatch =  groupedOpenApi.getPathsToMatch();
-        assertNotNull(pathsToMatch, "Los paths configurados no deberían ser nulos");
-        assertEquals(5, pathsToMatch.length, "El número de rutas configuradas debería ser 5");
-        assertEquals("/user/**", pathsToMatch[0], "La primera ruta debería ser '/user/**'");
-        assertEquals("/pet/**", pathsToMatch[1], "La segunda ruta debería ser '/pet/**'");
-        assertEquals("/home/**", pathsToMatch[2], "La tercera ruta debería ser '/home/**'");
-        assertEquals("/admin/**", pathsToMatch[3], "La cuarta ruta debería ser '/admin/**'");
-        assertEquals("/register/**", pathsToMatch[4], "La quinta ruta debería ser '/register/**'");
-    }
+		// Verify security scheme
+		SecurityScheme securityScheme = openAPI.getComponents().getSecuritySchemes().get("bearer-key");
+		assertNotNull(securityScheme);
+		assertEquals(SecurityScheme.Type.HTTP, securityScheme.getType());
+		assertEquals("bearer", securityScheme.getScheme().trim());
+		assertEquals("JWT", securityScheme.getBearerFormat());
+
+		// Verify tags
+		boolean hasUserTag = openAPI.getTags().stream().anyMatch(tag -> tag.getName().equals("User Management"));
+		boolean hasPetTag = openAPI.getTags().stream().anyMatch(tag -> tag.getName().equals("Pet Management"));
+		assertEquals(true, hasUserTag);
+		assertEquals(true, hasPetTag);
+	}
+
+	@Test
+	void testPublicApiGroupedOpenApi() {
+		GroupedOpenApi publicApi = swaggerConfiguration.publicApi();
+
+		assertNotNull(publicApi);
+		assertEquals("public-api", publicApi.getGroup());
+
+		// Verify paths
+		List<String> pathsToMatch = publicApi.getPathsToMatch();
+		assertNotNull(pathsToMatch);
+		assertEquals(3, pathsToMatch.size());
+		assertTrue(pathsToMatch.contains("/pet/**"));
+		assertTrue(pathsToMatch.contains("/home/**"));
+		assertTrue(pathsToMatch.contains("/register/**"));
+	}
+
+	@Test
+	void testAdminApiGroupedOpenApi() {
+		GroupedOpenApi adminApi = swaggerConfiguration.adminApi();
+
+		assertNotNull(adminApi);
+		assertEquals("admin-api", adminApi.getGroup());
+
+		// Verify paths
+		List<String> pathsToMatch = adminApi.getPathsToMatch();
+		assertNotNull(pathsToMatch);
+		assertEquals(1, pathsToMatch.size());
+		assertTrue(pathsToMatch.contains("/admin/**"));
+	}
+
+	@Test
+	void testUserApiGroupedOpenApi() {
+		GroupedOpenApi userApi = swaggerConfiguration.userApi();
+
+		assertNotNull(userApi);
+		assertEquals("user-api", userApi.getGroup());
+
+		// Verify paths
+		List<String> pathsToMatch = userApi.getPathsToMatch();
+		assertNotNull(pathsToMatch);
+		assertEquals(1, pathsToMatch.size());
+		assertTrue(pathsToMatch.contains("/user/**"));
+	}
 }

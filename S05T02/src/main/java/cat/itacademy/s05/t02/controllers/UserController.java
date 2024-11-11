@@ -82,20 +82,22 @@ public class UserController {
 
 	@Operation(summary = "Delete a pet", description = "Delete an existing pet introducing its pet ID. ")
 	@DeleteMapping("/{id}/delete")
-	public Mono<ResponseEntity<String>> deleteGame(@RequestHeader("Authorization") String authHeader,
+	public Mono<ResponseEntity<String>> deletePet(@RequestHeader("Authorization") String authHeader,
 			@PathVariable("id") String petId) {
 		String jwt = authHeader.replace("Bearer ", "");
 		return jwtService.extractUserId(jwt).flatMap(userId -> petService.findPetById(Mono.just(petId)).flatMap(pet -> {
 			if (pet.getUserId().equals(userId)) {
 				return petService.deletePetById(Mono.just(petId)).then(Mono.just(
-						ResponseEntity.status(HttpStatus.NO_CONTENT).body("Pet " + petId + " deleted successfully")));
+						ResponseEntity.status(HttpStatus.NO_CONTENT).body("Pet " + petId + " deleted successfully. ")));
 			} else {
-				return Mono.just(
-						ResponseEntity.status(HttpStatus.FORBIDDEN).body("You are not authorized to delete this pet."));
+				return Mono.just(ResponseEntity.status(HttpStatus.FORBIDDEN)
+						.body("You are not authorized to delete this pet. "));
 			}
 		}).switchIfEmpty(Mono.error(new NotFoundException("Pet with ID: " + petId + " not found"))))
-				.onErrorResume(e -> Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
-						"An un expected error ocurred when trying to delete a pet. Check the data input before trying again. ")));
+				.onErrorResume(NotFoundException.class,
+						e -> Mono.just(ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage())))
+				.onErrorResume(e -> Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+						.body("An unexpected error occurred when trying to delete the pet. Please try again.")));
 	}
 
 	@Operation(summary = "Interact with a pet", description = "Interact with a pet using an specific action. ")

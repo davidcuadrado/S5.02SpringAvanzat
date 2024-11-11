@@ -38,7 +38,8 @@ public class PetService {
 	}
 
 	public Mono<Pet> findPetById(Mono<String> monoPetId) {
-		return monoPetId.flatMap(petId -> petRepository.findById(petId));
+		return monoPetId.flatMap(petId -> petRepository.findById(petId)
+				.switchIfEmpty(Mono.error(new NotFoundException("Pet not found"))));
 	}
 
 	public Flux<Pet> getPetsByUserId(Mono<String> monoUserId) {
@@ -47,9 +48,8 @@ public class PetService {
 	}
 
 	public Flux<Pet> getAllPets() {
-		return petRepository.findAll().switchIfEmpty(Mono.error(new NotFoundException("No existing pets to show. ")))
-				.sort((pet1, pet2) -> pet1.getPetId().compareTo(pet2.getPetId()))
-				.onErrorMap(e -> new DatabaseException("Error retrieving pets. "));
+		return petRepository.findAll().sort((pet1, pet2) -> pet1.getPetId().compareTo(pet2.getPetId()))
+				.switchIfEmpty(Mono.error(new NotFoundException("No existing pets to show. ")));
 	}
 
 	public Mono<Pet> deletePetById(Mono<String> monoPetId) {
@@ -122,8 +122,8 @@ public class PetService {
 		}).switchIfEmpty(Mono.error(new NotFoundException("Pet not found")));
 	}
 
-	public Mono<Pet> playWithPet(Mono<String> petId) {
-		return petRepository.findById(petId).flatMap(pet -> {
+	public Mono<Pet> playWithPet(Mono<String> petIdMono) {
+		return petIdMono.flatMap(petId -> petRepository.findById(petId).flatMap(pet -> {
 			if (pet.getEnergy() < 10) {
 				return Mono.error(new PetActionException("Pet is too tired to play"));
 			}
@@ -137,7 +137,7 @@ public class PetService {
 			}
 
 			return petRepository.save(pet);
-		}).switchIfEmpty(Mono.error(new NotFoundException("Pet not found")));
+		}).switchIfEmpty(Mono.error(new NotFoundException("Pet not found"))));
 	}
 
 	public Mono<Pet> changeEnvironment(Mono<String> petId, Mono<String> environment) {

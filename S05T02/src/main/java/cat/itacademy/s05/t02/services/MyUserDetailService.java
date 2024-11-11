@@ -36,7 +36,7 @@ public class MyUserDetailService implements ReactiveUserDetailsService {
 				.switchIfEmpty(Mono.error(new UsernameNotFoundException(username)));
 	}
 
-	private String[] getRoles(MyUser user) {
+	protected String[] getRoles(MyUser user) {
 		if (user.getRole() == null) {
 			return new String[] { "USER" };
 		}

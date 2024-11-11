@@ -13,9 +13,11 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.security.SignatureException;
 import reactor.core.publisher.Mono;
 
 @Service
@@ -47,14 +49,21 @@ public class JwtService {
 		});
 	}
 
-	private SecretKey generateKey() {
+	protected SecretKey generateKey() {
 		byte[] decodedKey = Base64.getDecoder().decode(SECRET);
 		return Keys.hmacShaKeyFor(decodedKey);
 	}
 
-	public Mono<String> extractUsername(String jwt) {
-		return Mono.fromCallable(() -> getClaims(jwt).getSubject());
+	public Mono<String> extractUsername(String token) {
+	    return Mono.fromCallable(() -> {
+	        try {
+	            return getClaims(token).getSubject();
+	        } catch (SignatureException e) {
+	            throw new IllegalArgumentException("Invalid JWT token signature", e);
+	        }
+	    });
 	}
+
 
 	public Mono<String> extractUserId(String jwt) {
 		return Mono.fromCallable(() -> getClaims(jwt).get("userId", String.class))
@@ -72,6 +81,8 @@ public class JwtService {
 				Date expiration = claims.getExpiration();
 				return expiration != null && expiration.after(Date.from(Instant.now()));
 			} catch (MalformedJwtException | IllegalArgumentException e) {
+				return false;
+			} catch(ExpiredJwtException e) {
 				return false;
 			}
 		});

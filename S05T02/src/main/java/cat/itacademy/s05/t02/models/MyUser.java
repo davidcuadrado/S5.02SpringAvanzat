@@ -19,12 +19,11 @@ public class MyUser {
 	private @Setter @Getter String password;
 	private @Setter @Getter String role;
 
-
 	public MyUser(String username, String password) {
 		this.username = username;
 		this.password = password;
 	}
-	
+
 	public String getUsername() {
 		return username;
 	}
@@ -39,16 +38,15 @@ public class MyUser {
 
 	public void setPassword(String password) {
 		this.password = password;
-		
+
 	}
 
 	public void setUsername(String newUsername) {
 		this.username = newUsername;
-		
 	}
-	
-	
 
-	
+	public void setRole(String role) {
+		this.role = role;
+	}
 
 }

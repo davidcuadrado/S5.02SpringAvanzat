@@ -34,6 +34,10 @@ public class Pet {
 	public String getPetId() {
 		return this.id;
 	}
+	
+	public void setPetId(String setId) {
+		this.id = setId;
+	}
 
 	public String getUserId() {
 		return this.userId;

@@ -1,5 +1,6 @@
 package cat.itacademy.s05.t02.services;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -8,7 +9,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import reactor.core.publisher.Mono;
@@ -32,19 +32,17 @@ class MyUserDetailServiceTest {
 
     @Test
     void findByUsername_withExistingUser_returnsUserDetails() {
-        MyUser myUser = new MyUser();
-        myUser.setUsername("testuser");
-        myUser.setPassword("password123");
+        MyUser myUser = new MyUser("testUser", "testPassword");
         myUser.setRole("USER");
 
         when(userRepository.findByUsername(anyString())).thenReturn(Mono.just(myUser));
 
-        Mono<UserDetails> result = myUserDetailService.findByUsername("testuser");
+        Mono<UserDetails> result = myUserDetailService.findByUsername("testUser");
 
         StepVerifier.create(result)
             .expectNextMatches(userDetails ->
-                userDetails.getUsername().equals("testuser") &&
-                userDetails.getPassword().equals("password123") &&
+                userDetails.getUsername().equals("testUser") &&
+                userDetails.getPassword().equals("testPassword") &&
                 userDetails.getAuthorities().stream().anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ROLE_USER"))
             )
             .verifyComplete();
@@ -63,19 +61,17 @@ class MyUserDetailServiceTest {
 
     @Test
     void findByUsernameMono_withExistingUser_returnsUserDetails() {
-        MyUser myUser = new MyUser();
-        myUser.setUsername("testuser");
-        myUser.setPassword("password123");
+    	MyUser myUser = new MyUser("testUser", "testPassword");
         myUser.setRole("USER");
 
         when(userRepository.findByUsername(anyString())).thenReturn(Mono.just(myUser));
 
-        Mono<UserDetails> result = myUserDetailService.findByUsernameMono(Mono.just("testuser"));
+        Mono<UserDetails> result = myUserDetailService.findByUsernameMono(Mono.just("testUser"));
 
         StepVerifier.create(result)
             .expectNextMatches(userDetails ->
-                userDetails.getUsername().equals("testuser") &&
-                userDetails.getPassword().equals("password123") &&
+                userDetails.getUsername().equals("testUser") &&
+                userDetails.getPassword().equals("testPassword") &&
                 userDetails.getAuthorities().stream().anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ROLE_USER"))
             )
             .verifyComplete();
@@ -94,7 +90,7 @@ class MyUserDetailServiceTest {
 
     @Test
     void getRoles_withNullRole_returnsUserRole() {
-        MyUser myUser = new MyUser();
+    	MyUser myUser = new MyUser("testUser", "testPassword");
         myUser.setRole(null);
 
         String[] roles = myUserDetailService.getRoles(myUser);
@@ -104,7 +100,7 @@ class MyUserDetailServiceTest {
 
     @Test
     void getRoles_withMultipleRoles_returnsRolesArray() {
-        MyUser myUser = new MyUser();
+    	MyUser myUser = new MyUser("testUser", "testPassword");
         myUser.setRole("USER,ADMIN");
 
         String[] roles = myUserDetailService.getRoles(myUser);
