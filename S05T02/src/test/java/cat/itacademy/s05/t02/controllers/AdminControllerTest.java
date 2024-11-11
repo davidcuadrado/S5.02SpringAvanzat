@@ -54,7 +54,6 @@ public class AdminControllerTest {
         String newPetName = "testNewPetName";
         String userId = "123";
         Pet pet = new Pet(newPetName, userId);
-        pet.setName(newPetName);
 
         when(jwtService.extractUserId("testToken")).thenReturn(Mono.just(userId));
         when(userService.createNewPet(any(Mono.class), any(Mono.class))).thenReturn(Mono.just(pet));
@@ -125,7 +124,7 @@ public class AdminControllerTest {
         Pet pet = new Pet(petId, petAction);
 
         when(petService.findPetById(any(Mono.class))).thenReturn(Mono.just(pet));
-        when(petService.nextPetAction(any(Mono.class), any(Mono.class))).thenReturn(Mono.just("Updated"));
+        when(petService.nextPetAction(any(Mono.class), any(Mono.class))).thenReturn(Mono.just(pet));
 
         Mono<ResponseEntity<String>> response = adminController.updatePet(petId, petAction);
 

@@ -113,8 +113,8 @@ public class UserController {
 			}
 		}).switchIfEmpty(
 				Mono.just(ResponseEntity.status(HttpStatus.NOT_FOUND).body("Pet with ID: " + petId + " not found"))))
-				.onErrorResume(e -> Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
-						"An un expected error ocurred when trying to interact with a pet. Check the data input and trying again. ")));
+				.onErrorResume(e -> Mono.just(ResponseEntity.status(HttpStatus.FORBIDDEN).body(
+						"You are not authorized to interact with this pet.")));
 
 	}
 

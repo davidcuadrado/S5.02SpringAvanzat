@@ -1,6 +1,7 @@
 package cat.itacademy.s05.t02.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -51,8 +52,8 @@ public class ContentController {
 	                } else {
 	                    return Mono.error(new UsernameNotFoundException("Invalid credentials"));
 	                }
-	            })
-	            .onErrorResume(e -> Mono.just(ResponseEntity.status(401).body("Authentication failed")));
+	            }).switchIfEmpty(Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authentication process error. ")))
+	            .onErrorResume(e -> Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authentication process error. ")));
 	}
 
 

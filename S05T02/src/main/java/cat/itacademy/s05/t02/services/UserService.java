@@ -5,15 +5,11 @@ import org.springframework.stereotype.Service;
 
 import cat.itacademy.s05.t02.exceptions.DatabaseException;
 import cat.itacademy.s05.t02.models.Pet;
-import cat.itacademy.s05.t02.repositories.MyUserRepository;
 import cat.itacademy.s05.t02.repositories.PetRepository;
 import reactor.core.publisher.Mono;
 
 @Service
 public class UserService {
-
-	@Autowired
-	private MyUserRepository userRepository;
 
 	@Autowired
 	private PetRepository petRepository;
