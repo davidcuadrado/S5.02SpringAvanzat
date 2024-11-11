@@ -9,6 +9,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import cat.itacademy.s05.t02.services.JwtService;
@@ -18,6 +19,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import reactor.core.publisher.Mono;
 
 @RestController
+@RequestMapping("/home")
 public class ContentController {
 
 	@Autowired
@@ -28,7 +30,7 @@ public class ContentController {
 	private MyUserDetailService myUserDetailService;
 
 	@Operation(summary = "Home page", description = "Home page for general users.")
-	@GetMapping("/home")
+	@GetMapping("")
 	public Mono<ResponseEntity<String>> handleWelcome() {
 		return Mono.just(ResponseEntity.ok("You are in the home site"));
 	}

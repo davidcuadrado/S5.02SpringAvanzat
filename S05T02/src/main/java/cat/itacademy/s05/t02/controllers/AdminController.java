@@ -23,7 +23,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-@Tag(name = "App", description = "the Application API")
+@Tag(name = "Admin", description = "the Admin API")
 @RestController
 @RequestMapping("/admin")
 public class AdminController {

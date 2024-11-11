@@ -44,7 +44,7 @@ public class JwtAuthenticationFilter implements WebFilter {
     }
 
 
-    private String extractToken(String header) {
+    public String extractToken(String header) {
         if (header == null || !header.startsWith("Bearer ")) {
             return null;
         }
