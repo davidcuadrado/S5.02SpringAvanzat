@@ -1,12 +1,9 @@
 package cat.itacademy.s05.t02.config;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -53,23 +50,18 @@ class AuthenticationSuccessHandlerTest {
 	    GrantedAuthority adminAuthority = mock(GrantedAuthority.class);
 	    when(adminAuthority.getAuthority()).thenReturn("ROLE_ADMIN");
 
-	    // Use thenAnswer to dynamically return a Collection with adminAuthority
 	    when(authentication.getAuthorities()).thenAnswer(invocation -> Collections.singletonList(adminAuthority));
 
-	    // Mock headers and response behavior
 	    HttpHeaders headers = new HttpHeaders();
 	    when(response.getHeaders()).thenReturn(headers);
 	    when(response.setComplete()).thenReturn(Mono.empty());
 
-	    // Execute the method under test
 	    Mono<Void> result = authenticationSuccessHandler.onAuthenticationSuccess(webFilterExchange, authentication);
 
-	    // Verify the result and interactions
 	    StepVerifier.create(result).verifyComplete();
 
-	    // Verify that the response was correctly set to redirect to "/admin/home"
 	    verify(response).setStatusCode(HttpStatus.FOUND);
-	    assertEquals(URI.create("/admin/home"), headers.getLocation()); // Verify the location header
+	    assertEquals(URI.create("/admin/home"), headers.getLocation());
 	    verify(response).setComplete();
 	}
 
@@ -79,10 +71,8 @@ class AuthenticationSuccessHandlerTest {
 		GrantedAuthority userAuthority = mock(GrantedAuthority.class);
 		when(userAuthority.getAuthority()).thenReturn("ROLE_USER");
 
-		// Use thenAnswer to return a Collection with the userAuthority
 		when(authentication.getAuthorities()).thenAnswer(invocation -> Collections.singletonList(userAuthority));
 
-		// Mock the headers and response behavior
 		HttpHeaders headers = new HttpHeaders();
 		when(response.getHeaders()).thenReturn(headers);
 		when(response.setComplete()).thenReturn(Mono.empty());
@@ -91,10 +81,8 @@ class AuthenticationSuccessHandlerTest {
 
 		StepVerifier.create(result).verifyComplete();
 
-		// Directly verify calls without doNothing
 		verify(response).setStatusCode(HttpStatus.FOUND);
-		assertEquals(URI.create("/user/home"), headers.getLocation()); // Verify that the location header was set
-																		// correctly
+		assertEquals(URI.create("/user/home"), headers.getLocation()); 
 		verify(response).setComplete();
 	}
 

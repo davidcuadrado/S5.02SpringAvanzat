@@ -1,10 +1,8 @@
 package cat.itacademy.s05.t02.config;
 
-import io.swagger.v3.oas.models.Components;
+
 import io.swagger.v3.oas.models.OpenAPI;
-import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.security.SecurityScheme;
-import io.swagger.v3.oas.models.tags.Tag;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -37,18 +35,15 @@ class SwaggerConfigurationTest {
 		assertEquals("API for managing users and pets.", openAPI.getInfo().getDescription().trim());
 		assertEquals("v1.0", openAPI.getInfo().getVersion());
 
-		// Verify contact information
 		assertEquals("David Cuadrado", openAPI.getInfo().getContact().getName());
 		assertEquals("dav.cuadrado@gmail.com", openAPI.getInfo().getContact().getEmail());
 
-		// Verify security scheme
 		SecurityScheme securityScheme = openAPI.getComponents().getSecuritySchemes().get("bearer-key");
 		assertNotNull(securityScheme);
 		assertEquals(SecurityScheme.Type.HTTP, securityScheme.getType());
 		assertEquals("bearer", securityScheme.getScheme().trim());
 		assertEquals("JWT", securityScheme.getBearerFormat());
 
-		// Verify tags
 		boolean hasUserTag = openAPI.getTags().stream().anyMatch(tag -> tag.getName().equals("User Management"));
 		boolean hasPetTag = openAPI.getTags().stream().anyMatch(tag -> tag.getName().equals("Pet Management"));
 		assertEquals(true, hasUserTag);
@@ -62,7 +57,6 @@ class SwaggerConfigurationTest {
 		assertNotNull(publicApi);
 		assertEquals("public-api", publicApi.getGroup());
 
-		// Verify paths
 		List<String> pathsToMatch = publicApi.getPathsToMatch();
 		assertNotNull(pathsToMatch);
 		assertEquals(3, pathsToMatch.size());
@@ -78,7 +72,6 @@ class SwaggerConfigurationTest {
 		assertNotNull(adminApi);
 		assertEquals("admin-api", adminApi.getGroup());
 
-		// Verify paths
 		List<String> pathsToMatch = adminApi.getPathsToMatch();
 		assertNotNull(pathsToMatch);
 		assertEquals(1, pathsToMatch.size());
@@ -92,7 +85,6 @@ class SwaggerConfigurationTest {
 		assertNotNull(userApi);
 		assertEquals("user-api", userApi.getGroup());
 
-		// Verify paths
 		List<String> pathsToMatch = userApi.getPathsToMatch();
 		assertNotNull(pathsToMatch);
 		assertEquals(1, pathsToMatch.size());

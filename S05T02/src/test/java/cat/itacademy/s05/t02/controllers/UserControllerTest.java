@@ -15,7 +15,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-import cat.itacademy.s05.t02.exceptions.NotFoundException;
 import cat.itacademy.s05.t02.models.Pet;
 import cat.itacademy.s05.t02.services.JwtService;
 import cat.itacademy.s05.t02.services.PetService;
