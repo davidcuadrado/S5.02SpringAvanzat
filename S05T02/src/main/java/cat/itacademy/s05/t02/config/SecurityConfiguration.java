@@ -33,7 +33,8 @@ public class SecurityConfiguration {
 	@Bean
 	public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
 		return http.csrf(csrf -> csrf.disable()).authorizeExchange(auth -> auth
-				.matchers(ServerWebExchangeMatchers.pathMatchers("/home", "/register/**", "/authenticate/**"))
+				.matchers(ServerWebExchangeMatchers.pathMatchers("/home", "/register/**", "/authenticate/**",
+						"/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html"))
 				.permitAll().pathMatchers("/user/**", "/pet/**").hasRole("USER")
 				.pathMatchers("/admin/**", "/user/**", "/pet/**").hasRole("ADMIN").anyExchange().authenticated())
 				.addFilterAt(jwtAuthenticationFilter, SecurityWebFiltersOrder.AUTHENTICATION)
@@ -41,7 +42,7 @@ public class SecurityConfiguration {
 						formLoginSpec -> formLoginSpec.loginPage("/login").authenticationManager(entry -> Mono.empty()))
 				.build();
 	}
-/*
+
 	@Bean
 	public CorsWebFilter corsWebFilter() {
 		CorsConfiguration config = new CorsConfiguration();
@@ -57,7 +58,6 @@ public class SecurityConfiguration {
 		source.registerCorsConfiguration("/**", config);
 		return new CorsWebFilter(source);
 	}
-	*/
 
 	@Bean
 	public ReactiveUserDetailsService userDetailsService() {
