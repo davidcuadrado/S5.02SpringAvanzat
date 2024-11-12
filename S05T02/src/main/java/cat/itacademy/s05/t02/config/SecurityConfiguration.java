@@ -13,6 +13,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatchers;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.reactive.CorsWebFilter;
+import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
 
 import cat.itacademy.s05.t02.services.MyUserDetailService;
 import reactor.core.publisher.Mono;
@@ -29,15 +32,30 @@ public class SecurityConfiguration {
 
 	@Bean
 	public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
-		return http.csrf(csrf -> csrf.disable())
-				.authorizeExchange(auth -> auth
-						.matchers(ServerWebExchangeMatchers.pathMatchers("/home", "/register/**", "/authenticate/**"))
-						.permitAll().pathMatchers("/user/**", "/pet/**").hasRole("USER").pathMatchers("/admin/**", "/user/**", "/pet/**").hasRole("ADMIN")
-						.anyExchange().authenticated())
+		return http.csrf(csrf -> csrf.disable()).authorizeExchange(auth -> auth
+				.matchers(ServerWebExchangeMatchers.pathMatchers("/home", "/register/**", "/authenticate/**"))
+				.permitAll().pathMatchers("/user/**", "/pet/**").hasRole("USER")
+				.pathMatchers("/admin/**", "/user/**", "/pet/**").hasRole("ADMIN").anyExchange().authenticated())
 				.addFilterAt(jwtAuthenticationFilter, SecurityWebFiltersOrder.AUTHENTICATION)
 				.formLogin(
 						formLoginSpec -> formLoginSpec.loginPage("/login").authenticationManager(entry -> Mono.empty()))
 				.build();
+	}
+
+	@Bean
+	public CorsWebFilter corsWebFilter() {
+		CorsConfiguration config = new CorsConfiguration();
+		config.addAllowedOrigin("http://localhost:3000");
+		config.setAllowCredentials(true);
+		config.addAllowedMethod("GET");
+		config.addAllowedMethod("POST");
+		config.addAllowedMethod("PUT");
+		config.addAllowedMethod("DELETE");
+		config.addAllowedHeader("*");
+
+		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+		source.registerCorsConfiguration("/**", config);
+		return new CorsWebFilter(source);
 	}
 
 	@Bean
