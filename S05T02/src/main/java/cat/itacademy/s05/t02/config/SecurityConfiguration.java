@@ -41,7 +41,7 @@ public class SecurityConfiguration {
 						formLoginSpec -> formLoginSpec.loginPage("/login").authenticationManager(entry -> Mono.empty()))
 				.build();
 	}
-
+/*
 	@Bean
 	public CorsWebFilter corsWebFilter() {
 		CorsConfiguration config = new CorsConfiguration();
@@ -57,6 +57,7 @@ public class SecurityConfiguration {
 		source.registerCorsConfiguration("/**", config);
 		return new CorsWebFilter(source);
 	}
+	*/
 
 	@Bean
 	public ReactiveUserDetailsService userDetailsService() {
