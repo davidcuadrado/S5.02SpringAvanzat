@@ -18,36 +18,33 @@ import reactor.core.publisher.Mono;
 @Configuration
 public class JwtAuthenticationFilter implements WebFilter {
 
-    @Autowired
-    private JwtService jwtService;
+	@Autowired
+	private JwtService jwtService;
 
-    @Autowired
-    private MyUserDetailService userDetailService;
+	@Autowired
+	private MyUserDetailService userDetailService;
 
-    @Override
-    public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
-        String token = extractToken(exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION));
+	@Override
+	public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
+		String token = extractToken(exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION));
 
-        return Mono.justOrEmpty(token)
-            .flatMap(jwtService::validateAndExtractUsername)
-            .flatMap(userDetailService::findByUsername)
-            .map(userDetails -> new UsernamePasswordAuthenticationToken(
-                    userDetails, null, userDetails.getAuthorities()))
-            .map(auth -> new SecurityContextImpl(auth))
-            .flatMap(securityContext -> 
-                chain.filter(exchange)
-                    .contextWrite(ReactiveSecurityContextHolder.withSecurityContext(Mono.just(securityContext))))
-            .onErrorResume(e -> {
-                exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
-                return exchange.getResponse().setComplete();
-            });
-    }
+		return Mono.justOrEmpty(token).flatMap(jwtService::validateAndExtractUsername)
+				.flatMap(userDetailService::findByUsername)
+				.map(userDetails -> new UsernamePasswordAuthenticationToken(userDetails, null,
+						userDetails.getAuthorities()))
+				.map(auth -> new SecurityContextImpl(auth))
+				.flatMap(securityContext -> chain.filter(exchange)
+						.contextWrite(ReactiveSecurityContextHolder.withSecurityContext(Mono.just(securityContext))))
+				.onErrorResume(e -> {
+					exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+					return exchange.getResponse().setComplete();
+				});
+	}
 
-
-    public String extractToken(String header) {
-        if (header == null || !header.startsWith("Bearer ")) {
-            return null;
-        }
-        return header.substring(7);
-    }
+	public String extractToken(String header) {
+		if (header == null || !header.startsWith("Bearer ")) {
+			return null;
+		}
+		return header.substring(7);
+	}
 }

@@ -14,8 +14,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatchers;
 import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.reactive.CorsConfigurationSource;
 import org.springframework.web.cors.reactive.CorsWebFilter;
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
+import org.springframework.web.server.ServerWebExchange;
+import org.springframework.web.server.WebFilterChain;
+import org.springframework.web.server.WebFilter;
 
 import cat.itacademy.s05.t02.services.MyUserDetailService;
 import reactor.core.publisher.Mono;
@@ -29,7 +33,41 @@ public class SecurityConfiguration {
 
 	@Autowired
 	private JwtAuthenticationFilter jwtAuthenticationFilter;
+	
+	
+	 @Bean
+	    public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
+	        http
+	            .csrf(csrf -> csrf.disable())
+	            .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Habilita CORS
+	            .authorizeExchange(exchanges -> exchanges
+	                .pathMatchers("/home", "/register/**", "/authenticate/**").permitAll()
+	                .pathMatchers("/user/**", "/pet/**").hasRole("USER")
+	                .pathMatchers("/admin/**", "/user/**", "/pet/**").hasRole("ADMIN")
+	                .anyExchange().authenticated()
+	            );
 
+	        return http.build();
+	    }
+
+	    @Bean
+	    public CorsConfigurationSource corsConfigurationSource() {
+	        CorsConfiguration config = new CorsConfiguration();
+	        config.addAllowedOrigin("http://localhost:3000"); // Permite solicitudes desde el origen del frontend
+	        config.addAllowedMethod("*");                     // Permite todos los métodos HTTP
+	        config.addAllowedHeader("*");                     // Permite todas las cabeceras
+	        config.setAllowCredentials(true);                 // Permite credenciales
+
+	        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+	        source.registerCorsConfiguration("/**", config);
+	        return source;
+	    }
+	
+	
+	
+	
+	
+	/*
 	@Bean
 	public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
 		return http.csrf(csrf -> csrf.disable()).authorizeExchange(auth -> auth
@@ -42,7 +80,10 @@ public class SecurityConfiguration {
 						formLoginSpec -> formLoginSpec.loginPage("/login").authenticationManager(entry -> Mono.empty()))
 				.build();
 	}
+	*/
 
+	
+	/*
 	@Bean
 	public CorsWebFilter corsWebFilter() {
 		CorsConfiguration config = new CorsConfiguration();
@@ -58,6 +99,22 @@ public class SecurityConfiguration {
 		source.registerCorsConfiguration("/**", config);
 		return new CorsWebFilter(source);
 	}
+	*/
+	
+	/*
+	 @Bean
+	    public CorsWebFilter corsWebFilter() {
+	        CorsConfiguration config = new CorsConfiguration();
+	        config.addAllowedOrigin("http://localhost:3000");  // Permite solicitudes desde tu frontend
+	        config.addAllowedMethod("*");  // Permite todos los métodos HTTP
+	        config.addAllowedHeader("*");  // Permite todas las cabeceras
+	        config.setAllowCredentials(true);  // Permite cookies y autenticación
+
+	        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+	        source.registerCorsConfiguration("/**", config);
+	        return new CorsWebFilter(source);
+	    }
+	 */
 
 	@Bean
 	public ReactiveUserDetailsService userDetailsService() {

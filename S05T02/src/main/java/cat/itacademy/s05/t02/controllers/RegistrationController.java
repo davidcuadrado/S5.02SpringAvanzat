@@ -27,10 +27,17 @@ public class RegistrationController {
 	@Operation(summary = "User registration", description = "Endpoint for user registration")
 	@PostMapping("/new")
 	public Mono<ResponseEntity<MyUser>> createUser(@RequestBody MyUser user) {
-		return Mono.just(user).map(userModify -> {
-			userModify.setPassword(passwordEncoder.encode(userModify.getPassword()));
-			return userModify;
-		}).flatMap(myUserRepository::save).map(savedUser -> ResponseEntity.ok(savedUser))
-				.defaultIfEmpty(ResponseEntity.badRequest().build());
+	    user.setPassword(passwordEncoder.encode(user.getPassword()));
+	    
+	    // Log before saving
+	    System.out.println("Attempting to save user: " + user);
+	    
+	    return myUserRepository.save(user)
+	            .map(savedUser -> {
+	                // Log after saving
+	                System.out.println("User saved successfully: " + savedUser);
+	                return ResponseEntity.ok(savedUser);
+	            })
+	            .defaultIfEmpty(ResponseEntity.badRequest().build());
 	}
 }
