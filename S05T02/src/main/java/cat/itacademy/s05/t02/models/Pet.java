@@ -24,7 +24,7 @@ public class Pet {
 	private int health;
 	private String color;
 	private ArrayList<String> specialTreats;
-	private String environment;
+	private PetEnvironment environment;
 
 	public Pet(String name, String userId) {
 		this.name = name;
@@ -34,7 +34,7 @@ public class Pet {
 	public String getPetId() {
 		return this.id;
 	}
-	
+
 	public void setPetId(String setId) {
 		this.id = setId;
 	}
@@ -42,7 +42,7 @@ public class Pet {
 	public String getUserId() {
 		return this.userId;
 	}
-	
+
 	public void setUserId(String userId) {
 		this.userId = userId;
 	}
@@ -50,7 +50,7 @@ public class Pet {
 	public void setName(String petName) {
 		this.name = petName;
 	}
-	
+
 	public String getName() {
 		return name;
 	}
@@ -110,16 +110,16 @@ public class Pet {
 	public void setSpecialTreats(ArrayList<String> specialTreats) {
 		this.specialTreats = specialTreats;
 	}
-	
+
 	public void addSpecialTreats(String specialTreat) {
 		this.specialTreats.add(specialTreat);
 	}
 
-	public String getEnvironment() {
+	public PetEnvironment getEnvironment() {
 		return environment;
 	}
 
-	public void setEnvironment(String environment) {
+	public void setEnvironment(PetEnvironment environment) {
 		this.environment = environment;
 	}
 
@@ -138,9 +138,5 @@ public class Pet {
 	public void setHealth(int health) {
 		this.health = health;
 	}
-	
-	
-
-	
 
 }

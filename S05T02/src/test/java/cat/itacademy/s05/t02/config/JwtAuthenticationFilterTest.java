@@ -11,9 +11,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.server.RequestPath;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -56,11 +58,15 @@ class JwtAuthenticationFilterTest {
 
 	@BeforeEach
 	void setUp() {
-		MockitoAnnotations.openMocks(this);
+	    MockitoAnnotations.openMocks(this);
 
-		when(exchange.getRequest()).thenReturn(request);
-		when(exchange.getResponse()).thenReturn(response);
-		when(request.getHeaders()).thenReturn(headers);
+	    when(exchange.getRequest()).thenReturn(request);
+	    when(exchange.getResponse()).thenReturn(response);
+	    when(request.getHeaders()).thenReturn(headers);
+
+	    RequestPath requestPath = Mockito.mock(RequestPath.class);
+	    when(request.getPath()).thenReturn(requestPath);
+	    when(requestPath.value()).thenReturn("/somePath");
 	}
 
 	@Test

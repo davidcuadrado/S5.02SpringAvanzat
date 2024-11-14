@@ -23,7 +23,7 @@ public class AuthenticationSuccessHandler implements ServerAuthenticationSuccess
 					.anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ROLE_ADMIN"));
 
 			String redirectUrl = isAdmin ? "/admin/home" : "/user/home";
-			setRedirectResponse(exchange, redirectUrl); // Extracted method
+			setRedirectResponse(exchange, redirectUrl);
 
 			return exchange.getResponse().setComplete();
 		});

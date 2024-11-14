@@ -8,6 +8,7 @@ import cat.itacademy.s05.t02.exceptions.DatabaseException;
 import cat.itacademy.s05.t02.exceptions.NotFoundException;
 import cat.itacademy.s05.t02.exceptions.PetActionException;
 import cat.itacademy.s05.t02.models.Pet;
+import cat.itacademy.s05.t02.models.PetEnvironment;
 import cat.itacademy.s05.t02.models.PetMood;
 import cat.itacademy.s05.t02.repositories.PetRepository;
 import reactor.core.publisher.Flux;
@@ -76,7 +77,7 @@ public class PetService {
 				return playWithPet(monoPetId);
 
 			case "environment":
-				return changeEnvironment(monoPetId, Mono.just("requested environment"));
+				return changeEnvironment(monoPetId, Mono.just(PetEnvironment.valueOf(petAction)));
 
 			case "cheer":
 				return cheerPet(monoPetId);
@@ -140,7 +141,7 @@ public class PetService {
 		}).switchIfEmpty(Mono.error(new NotFoundException("Pet not found"))));
 	}
 
-	public Mono<Pet> changeEnvironment(Mono<String> petId, Mono<String> environment) {
+	public Mono<Pet> changeEnvironment(Mono<String> petId, Mono<PetEnvironment> environment) {
 		return petId.flatMap(id -> petRepository.findById(id).flatMap(pet -> environment.map(env -> {
 			pet.setEnvironment(env);
 			pet.setHappiness(pet.getHappiness() + 5);

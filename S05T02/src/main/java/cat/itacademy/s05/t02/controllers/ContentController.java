@@ -36,11 +36,21 @@ public class ContentController {
 	}
 
 	@Operation(summary = "Login page", description = "Login page for all users")
-	@GetMapping("/login")
-	public Mono<ResponseEntity<String>> handleLogin() {
-		return Mono.just(ResponseEntity.ok("custom_login"));
+	@PostMapping("/login")
+	public Mono<ResponseEntity<String>> handleLogin(@RequestBody LoginForm loginForm) {
+	    return myUserDetailService.findByUsernameMono(Mono.just(loginForm.username()))
+	        .flatMap(user -> {
+	            if (user.getPassword().equals(loginForm.password())) {
+	                return jwtService.generateToken(Mono.just(user))
+	                    .map(token -> ResponseEntity.ok().body(token));
+	            } else {
+	                return Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials"));
+	            }
+	        })
+	        .switchIfEmpty(Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not found")));
 	}
 
+	
 	@Operation(summary = "Verify authentication", description = "Endpoint for authenticate validation and token register.")
 	@PostMapping("/authenticate")
 	public Mono<ResponseEntity<String>> authenticateAndGetToken(@RequestBody LoginForm loginForm) {
