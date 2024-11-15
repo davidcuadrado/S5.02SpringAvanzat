@@ -29,12 +29,10 @@ public class RegistrationController {
 	public Mono<ResponseEntity<MyUser>> createUser(@RequestBody MyUser user) {
 	    user.setPassword(passwordEncoder.encode(user.getPassword()));
 	    
-	    // Log before saving
 	    System.out.println("Attempting to save user: " + user);
 	    
 	    return myUserRepository.save(user)
 	            .map(savedUser -> {
-	                // Log after saving
 	                System.out.println("User saved successfully: " + savedUser);
 	                return ResponseEntity.ok(savedUser);
 	            })
