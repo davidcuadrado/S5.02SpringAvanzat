@@ -1,13 +1,13 @@
 package cat.itacademy.s05.t02.token;
 
-public record LoginResponse(String jwtToken, String userRole) {
+public record LoginResponse(String token, String role) {
 	
-	public String jwtToken() {
-		return jwtToken;
+	public String token() {
+		return token;
 	}
 
-	public String userRole() {
-		return userRole;
+	public String role() {
+		return role;
 	}
 
 }
