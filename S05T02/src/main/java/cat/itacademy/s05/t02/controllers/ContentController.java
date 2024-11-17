@@ -23,7 +23,10 @@ import cat.itacademy.s05.t02.services.MyUserDetailService;
 import cat.itacademy.s05.t02.token.LoginForm;
 import cat.itacademy.s05.t02.token.LoginResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.validation.Valid;
 import reactor.core.publisher.Mono;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @RestController
 @RequestMapping("/home")
@@ -38,6 +41,8 @@ public class ContentController {
 	@Autowired
 	private PasswordEncoder passwordEncoder;
 
+	private static final Logger log = LoggerFactory.getLogger(ContentController.class);
+
 	@Operation(summary = "Home page", description = "Home page for general users.")
 	@GetMapping("")
 	public Mono<ResponseEntity<String>> handleWelcome() {
@@ -46,17 +51,20 @@ public class ContentController {
 
 	@Operation(summary = "Login page", description = "Login page for all users")
 	@PostMapping("/login")
-	public Mono<ResponseEntity<LoginResponse>> handleLogin(@RequestBody LoginForm loginForm) {
+	public Mono<ResponseEntity<LoginResponse>> handleLogin(@Valid @RequestBody LoginForm loginForm) {
+		log.debug("Received login request for username: {}", loginForm.username());
 		return myUserDetailService.findByUsernameMono(Mono.just(loginForm.username())).flatMap(user -> {
+			log.debug("User found: {}", user.getUsername());
 			if (passwordEncoder.matches(loginForm.password(), user.getPassword())) {
+				log.debug("Password matches for user: {}", user.getUsername());
 				return jwtService.generateToken(Mono.just(user)).map(token -> {
 					String role = user.getAuthorities().stream().map(GrantedAuthority::getAuthority).findFirst()
-							.orElse("USER"); // Default role to USER if no authority is found
-
-					LoginResponse response = new LoginResponse(token, role);
-					return ResponseEntity.ok(response);
+							.orElse("USER");
+					log.debug("Generated token for user: {}, role: {}", user.getUsername(), role);
+					return ResponseEntity.ok(new LoginResponse(token, role));
 				});
 			} else {
+				log.warn("Invalid password for user: {}", user.getUsername());
 				return Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED)
 						.body(new LoginResponse(null, "Invalid credentials")));
 			}
@@ -64,18 +72,26 @@ public class ContentController {
 				.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new LoginResponse(null, "User not found"))));
 	}
 
-	@Operation(summary = "Verify authentication", description = "Endpoint for authenticate validation and token register.")
+	@Operation(summary = "Verify authentication", description = "Endpoint for authentication validation and token register.")
 	@PostMapping("/authenticate")
-	public Mono<ResponseEntity<String>> authenticateAndGetToken(@RequestBody LoginForm loginForm) {
+	public Mono<ResponseEntity<LoginResponse>> authenticateAndGetToken(@RequestBody LoginForm loginForm) {
+		log.debug("Received authentication request for username: {}", loginForm.username());
+
 		return authenticationManager
 				.authenticate(new UsernamePasswordAuthenticationToken(loginForm.username(), loginForm.password()))
 				.cast(UserDetails.class)
-				.flatMap(userDetails -> jwtService.generateToken(Mono.just(userDetails))
-						.map(token -> ResponseEntity.ok(token)))
-				.switchIfEmpty(
-						Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authentication process error.")))
-				.onErrorResume(
-						e -> Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authentication failed.")));
+				.flatMap(userDetails -> jwtService.generateToken(Mono.just(userDetails)).map(token -> {
+					String role = userDetails.getAuthorities().stream().map(GrantedAuthority::getAuthority).findFirst()
+							.orElse("USER");
+					log.debug("Generated token for user: {}, role: {}", userDetails.getUsername(), role);
+					return ResponseEntity.ok(new LoginResponse(token, role));
+				})).switchIfEmpty(Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+						.body(new LoginResponse(null, "Authentication process error."))))
+				.onErrorResume(e -> {
+					log.error("Authentication failed: {}", e.getMessage(), e);
+					return Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+							.body(new LoginResponse(null, "Authentication failed.")));
+				});
 	}
 
 }

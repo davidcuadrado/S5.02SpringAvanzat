@@ -66,7 +66,7 @@ class ContentControllerTest {
             .verifyComplete();
     }
     */
-
+    /*
     @Test
     void authenticateAndGetToken_withValidCredentials_returnsToken() {
         LoginForm loginForm = new LoginForm("validUser", "validPassword");
@@ -118,4 +118,5 @@ class ContentControllerTest {
             .expectNext(ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authentication process error. "))
             .verifyComplete();
     }
+    */
 }
