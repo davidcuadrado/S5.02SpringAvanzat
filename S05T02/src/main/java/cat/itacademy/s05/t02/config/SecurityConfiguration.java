@@ -57,8 +57,8 @@ public class SecurityConfiguration {
 	            .csrf(csrf -> csrf.disable())
 	            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 	            .authorizeExchange(exchanges -> exchanges
-	                .pathMatchers("/home/**", "/register/**", "/authenticate/**", "home/login", "home/authenticate", "swagger/**").permitAll()
-	                .pathMatchers("/user/**", "/pet/**").hasRole("USER")
+	                .pathMatchers("/authenticate/**", "home/login", "/home/register", "home/authenticate", "swagger/**").permitAll()
+	                .pathMatchers("/user/**", "/pet/**", "/user/create").hasRole("USER")
 	                .pathMatchers("/admin/**", "/user/**", "/pet/**").hasRole("ADMIN")
 	                .anyExchange().authenticated()
 	            )
