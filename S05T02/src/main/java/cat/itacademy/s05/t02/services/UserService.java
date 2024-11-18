@@ -19,6 +19,13 @@ public class UserService {
 			Pet pet = tuple.getT1();
 			String userId = tuple.getT2();
 			pet.setUserId(userId);
+			
+			 if (pet.getHappiness() == 0) pet.setHappiness(100);
+	            if (pet.getEnergy() == 0) pet.setEnergy(100);
+	            if (pet.getHunger() == 0) pet.setHunger(50);
+	            if (pet.getHygiene() == 0) pet.setHygiene(100);
+	            if (pet.getHealth() == 0) pet.setHealth(100);
+	            
 			return petRepository.save(pet);
 		});
 	}

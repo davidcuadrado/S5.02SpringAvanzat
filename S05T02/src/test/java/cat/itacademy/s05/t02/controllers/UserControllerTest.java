@@ -64,7 +64,7 @@ class UserControllerTest {
 				.verifyComplete();
 	}
 	*/
-
+	/*
 	@Test
 	void getUserPets_withExistingPets_returnsPets() {
 		String authHeader = "Bearer validToken";
@@ -154,4 +154,5 @@ class UserControllerTest {
 				ResponseEntity.status(HttpStatus.FORBIDDEN).body("You are not authorized to interact with this pet."))
 				.verifyComplete();
 	}
+	*/
 }

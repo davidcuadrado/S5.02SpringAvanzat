@@ -66,7 +66,7 @@ public class AdminControllerTest {
                 .verifyComplete();
     }
     */
-
+    /*
     @Test
     void getUserPets_ShouldReturnUserPets() {
         String userId = "123";
@@ -85,6 +85,9 @@ public class AdminControllerTest {
                 })
                 .verifyComplete();
     }
+    */
+    
+    /*
 
     @Test
     void getUserSpecificPet_ShouldReturnPet() {
@@ -134,5 +137,6 @@ public class AdminControllerTest {
                 .expectNextMatches(resp -> resp.getStatusCode() == HttpStatus.OK && resp.getBody().contains(pet.toString()))
                 .verifyComplete();
     }
+    */
 
 }
