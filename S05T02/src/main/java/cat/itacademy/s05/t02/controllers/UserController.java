@@ -47,10 +47,10 @@ public class UserController {
 	@Operation(summary = "Create new pet", description = "Create a new user's pet ")
 	@PostMapping("/create")
 	public Mono<ResponseEntity<Pet>> createNewPet(@RequestHeader("Authorization") String authHeader,
-			@RequestBody String newPetName) {
+			@RequestBody Pet petRequest) {
 		String jwt = authHeader.replace("Bearer ", "");
 		return jwtService.extractUserId(jwt)
-				.flatMap(userId -> userService.createNewPet(Mono.just(newPetName), Mono.just(userId)))
+				.flatMap(userId -> userService.createNewPet(Mono.just(petRequest), Mono.just(userId)))
 				.map(createdPet -> ResponseEntity.status(HttpStatus.CREATED).body(createdPet))
 				.onErrorResume(e -> Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null)));
 	}
