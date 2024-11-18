@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.security.Keys;
@@ -31,6 +32,7 @@ public class JwtService {
 			return Mono.fromCallable(() -> {
 				Map<String, Object> claims = new HashMap<>();
 				claims.put("iss", "ITAcademyS05T02");
+				claims.put("userId", userDetails.getUsername());
 
 				return Jwts.builder().claims(claims).subject(userDetails.getUsername())
 						.issuedAt(Date.from(Instant.now())).expiration(Date.from(Instant.now().plusMillis(VALIDITY)))
@@ -75,17 +77,18 @@ public class JwtService {
 	}
 
 	public Mono<Boolean> isTokenValid(String jwt) {
-		return Mono.fromCallable(() -> {
-			try {
-				Claims claims = getClaims(jwt);
-				Date expiration = claims.getExpiration();
-				return expiration != null && expiration.after(Date.from(Instant.now()));
-			} catch (MalformedJwtException | IllegalArgumentException e) {
-				return false;
-			} catch(ExpiredJwtException e) {
-				return false;
-			}
-		});
+	    return Mono.fromCallable(() -> {
+	        try {
+	            Claims claims = getClaims(jwt);
+	            Date expiration = claims.getExpiration();
+	            return expiration != null && expiration.after(Date.from(Instant.now()));
+	        } catch (ExpiredJwtException e) {
+	            return false;
+	        } catch (JwtException | IllegalArgumentException e) {
+	            return false;
+	        }
+	    });
 	}
+
 
 }

@@ -38,12 +38,15 @@ public class JwtAuthenticationFilter implements WebFilter {
 				.map(userDetails -> new UsernamePasswordAuthenticationToken(userDetails, null,
 						userDetails.getAuthorities()))
 				.map(auth -> new SecurityContextImpl(auth))
-				.flatMap(securityContext -> chain.filter(exchange)
-						.contextWrite(ReactiveSecurityContextHolder.withSecurityContext(Mono.just(securityContext))))
+				.flatMap(securityContext -> 
+			    chain.filter(exchange)
+			        .contextWrite(ReactiveSecurityContextHolder.withSecurityContext(Mono.just(securityContext))))
+
 				.onErrorResume(e -> {
-					exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
-					return exchange.getResponse().setComplete();
+				    exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+				    return exchange.getResponse().setComplete();
 				});
+
 	}
 
 	public String extractToken(String header) {
