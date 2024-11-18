@@ -51,26 +51,40 @@ public class ContentController {
 
 	@Operation(summary = "Login page", description = "Login page for all users")
 	@PostMapping("/login")
-	public Mono<ResponseEntity<LoginResponse>> handleLogin(@Valid @RequestBody LoginForm loginForm) {
-		log.debug("Received login request for username: {}", loginForm.username());
-		return myUserDetailService.findByUsernameMono(Mono.just(loginForm.username())).flatMap(user -> {
-			log.debug("User found: {}", user.getUsername());
-			if (passwordEncoder.matches(loginForm.password(), user.getPassword())) {
-				log.debug("Password matches for user: {}", user.getUsername());
-				return jwtService.generateToken(Mono.just(user)).map(token -> {
-					String role = user.getAuthorities().stream().map(GrantedAuthority::getAuthority).findFirst()
-							.orElse("USER");
-					log.debug("Generated token for user: {}, role: {}", user.getUsername(), role);
-					return ResponseEntity.ok(new LoginResponse(token, role));
-				});
-			} else {
-				log.warn("Invalid password for user: {}", user.getUsername());
-				return Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-						.body(new LoginResponse(null, "Invalid credentials")));
-			}
-		}).switchIfEmpty(Mono
-				.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new LoginResponse(null, "User not found"))));
+	public Mono<ResponseEntity<Map<String, String>>> handleLogin(@Valid @RequestBody LoginForm loginForm) {
+	    log.debug("Received login request for username: {}", loginForm.username());
+	    
+	    return myUserDetailService.findByUsernameMono(Mono.just(loginForm.username()))
+	        .flatMap(user -> {
+	            log.debug("User found: {}", user.getUsername());
+	            if (passwordEncoder.matches(loginForm.password(), user.getPassword())) {
+	                log.debug("Password matches for user: {}", user.getUsername());
+	                return jwtService.generateToken(Mono.just(user))
+	                    .map(token -> {
+	                        String role = user.getAuthorities().stream()
+	                            .map(GrantedAuthority::getAuthority)
+	                            .findFirst()
+	                            .orElse("USER");
+	                        log.debug("Generated token for user: {}, role: {}", user.getUsername(), role);
+	                        
+	                        Map<String, String> responseBody = new HashMap<>();
+	                        responseBody.put("token", token);
+	                        responseBody.put("role", role);
+	                        return ResponseEntity.ok(responseBody);
+	                    });
+	            } else {
+	                log.warn("Invalid password for user: {}", user.getUsername());
+	                return Mono.just(ResponseEntity
+	                    .status(HttpStatus.UNAUTHORIZED)
+	                    .body(Map.of("error", "Invalid credentials")));
+	            }
+	        })
+	        .switchIfEmpty(Mono.just(
+	            ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+	                .body(Map.of("error", "User not found"))
+	        ));
 	}
+
 
 	@Operation(summary = "Verify authentication", description = "Endpoint for authentication validation and token register.")
 	@PostMapping("/authenticate")

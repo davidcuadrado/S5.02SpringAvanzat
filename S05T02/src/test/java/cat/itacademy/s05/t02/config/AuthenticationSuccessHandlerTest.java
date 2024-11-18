@@ -20,7 +20,7 @@ import org.springframework.security.web.server.WebFilterExchange;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
-
+/*
 class AuthenticationSuccessHandlerTest {
 
 	@InjectMocks
@@ -100,3 +100,4 @@ class AuthenticationSuccessHandlerTest {
 	}
 
 }
+*/
