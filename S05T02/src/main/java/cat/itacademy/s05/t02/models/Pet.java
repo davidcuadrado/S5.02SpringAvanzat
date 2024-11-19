@@ -26,13 +26,12 @@ public class Pet {
 	private ArrayList<String> specialTreats;
 	private PetEnvironment environment;
 
-	public Pet(String name, String userId, PetType petType, PetColor petColor, PetEnvironment environment, ArrayList<String> specialTreats) {
+	public Pet(String name, String userId, PetType petType, PetColor petColor, PetEnvironment environment) {
 		this.name = name;
 		this.userId = userId;
 		this.petType = petType;
 		this.petColor = petColor;
 		this.environment = environment;
-		this.specialTreats = specialTreats;
 	}
 
 	public String getPetId() {

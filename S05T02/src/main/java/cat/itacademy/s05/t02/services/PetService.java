@@ -14,7 +14,6 @@ import cat.itacademy.s05.t02.models.PetMood;
 import cat.itacademy.s05.t02.repositories.PetRepository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import java.util.Random;
 
 @Service
 public class PetService {
@@ -171,32 +170,29 @@ public class PetService {
 		}).switchIfEmpty(Mono.error(new NotFoundException("Pet not found")));
 	}
 
-
-
 	public Mono<Pet> addAccessory(Mono<String> petId) {
-	    return petId.flatMap(id -> petRepository.findById(id).flatMap(pet -> {
-	        // Randomly select an accessory
-	        PetAccessory randomAccessory = getRandomAccessory();
-	        pet.getSpecialTreats().add(randomAccessory.toString());
+		return petId.flatMap(id -> petRepository.findById(id).flatMap(pet -> {
+			PetAccessory randomAccessory = getRandomAccessory();
+			pet.getSpecialTreats().add(randomAccessory.toString());
 
-	        pet.setHappiness(pet.getHappiness() + 5);
-	        pet.setHygiene(Math.max(pet.getHygiene() - 5, 0));
+			pet.setHappiness(pet.getHappiness() + 5);
+			pet.setHygiene(Math.max(pet.getHygiene() - 5, 0));
 
-	        if (new Random().nextDouble() < 0.1) {
-	            pet.setHappiness(Math.max(pet.getHappiness() - 10, 0));
-	        }
+			if (new Random().nextDouble() < 0.1) {
+				pet.setHappiness(Math.max(pet.getHappiness() - 10, 0));
+			}
 
-	        return petRepository.save(pet);
-	    })).switchIfEmpty(Mono.error(new NotFoundException("Pet not found")));
+			return petRepository.save(pet);
+		})).switchIfEmpty(Mono.error(new NotFoundException("Pet not found")));
 	}
 
 	private PetAccessory getRandomAccessory() {
-	    PetAccessory[] accessories = PetAccessory.values();
-	    int randomIndex = new Random().nextInt(accessories.length);
-	    return accessories[randomIndex];
+		PetAccessory[] accessories = PetAccessory.values();
+		int randomIndex = new Random().nextInt(accessories.length);
+		return accessories[randomIndex];
 	}
 
-
+	
 	public Mono<Pet> putPetToSleep(Mono<String> petId) {
 		return petId.flatMap(id -> petRepository.findById(id).flatMap(pet -> {
 			pet.setEnergy(Math.min(pet.getEnergy() + 50, 100));
@@ -260,22 +256,6 @@ public class PetService {
 			}
 			return petRepository.save(pet);
 		})).switchIfEmpty(Mono.error(new NotFoundException("Pet not found")));
-	}
-
-	public Mono<Pet> giveSpecialTreat(Mono<String> petId, Mono<String> treat) {
-		return petId.flatMap(id -> petRepository.findById(id).flatMap(pet -> treat.map(t -> {
-			pet.getSpecialTreats().add(t);
-			pet.setHappiness(pet.getHappiness() + 10);
-			pet.setEnergy(Math.min(pet.getEnergy() + 10, 100));
-			pet.setHygiene(Math.max(pet.getHygiene() - 5, 0));
-
-			if (random.nextDouble() < 0.1) {
-				pet.setHappiness(Math.max(pet.getHappiness() - 15, 0));
-				pet.setHealth(Math.max(pet.getHealth() - 20, 0));
-			}
-
-			return pet;
-		})).flatMap(petRepository::save)).switchIfEmpty(Mono.error(new NotFoundException("Pet not found")));
 	}
 
 }
