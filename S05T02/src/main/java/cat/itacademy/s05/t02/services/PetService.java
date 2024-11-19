@@ -31,10 +31,6 @@ public class PetService {
 		});
 	}
 
-	public Mono<Pet> createNewPet(Mono<Pet> monoPet) {
-		return monoPet.flatMap(pet -> petRepository.save(pet))
-				.onErrorMap(e -> new DatabaseException("Error creating new pet"));
-	}
 
 	public Mono<Pet> findPetById(Mono<String> monoPetId) {
 		return monoPetId.flatMap(petId -> petRepository.findById(petId)
@@ -188,6 +184,7 @@ public class PetService {
 			pet.setEnergy(Math.min(pet.getEnergy() + 50, 100));
 			pet.setHappiness(pet.getHappiness() + 5);
 			pet.setHunger(Math.min(pet.getHunger() + 10, 100));
+			pet.setCurrentMood(PetMood.CALM);
 
 			if (random.nextDouble() < 0.05) {
 				pet.setHappiness(Math.max(pet.getHappiness() - 15, 0));

@@ -74,14 +74,15 @@ public class UserController {
 				});
 	}
 
+	
 	@Operation(summary = "Get a pet from a user", description = "Retrieve an specific pet from a user. ")
 	@GetMapping("/{id}")
 	public Mono<ResponseEntity<Pet>> getUserSpecificPet(@RequestHeader("Authorization") String authHeader,
 			@PathVariable("id") String petId) {
-
+		
 		String jwt = authHeader.replace("Bearer ", "");
 		return jwtService.extractUserId(jwt)
-				.flatMap(userId -> petService.getPetByUserIdAndPetId(Mono.just(userId), Mono.just(petId)))
+				.flatMap(userId -> petService.findPetById(Mono.just(petId)))
 				.map(pet -> ResponseEntity.ok(pet)).defaultIfEmpty(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
 	}
 
