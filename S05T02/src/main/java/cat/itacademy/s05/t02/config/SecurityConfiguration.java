@@ -33,77 +33,64 @@ public class SecurityConfiguration {
 
 	@Autowired
 	private JwtAuthenticationFilter jwtAuthenticationFilter;
-	
+
 	/*
+	 * @Bean public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity
+	 * http) { return http.csrf(csrf -> csrf.disable()).cors(cors ->
+	 * cors.configurationSource(corsConfigurationSource())) .authorizeExchange(auth
+	 * -> auth .matchers(ServerWebExchangeMatchers.pathMatchers("/home",
+	 * "/register/**", "/authenticate/**", "/v3/api-docs/**", "/swagger-ui/**",
+	 * "/swagger-ui.html")) .permitAll().pathMatchers("/user/**",
+	 * "/pet/**").hasRole("USER") .pathMatchers("/admin/**", "/user/**",
+	 * "/pet/**").hasRole("ADMIN").anyExchange() .authenticated())
+	 * .addFilterAt(jwtAuthenticationFilter, SecurityWebFiltersOrder.AUTHENTICATION)
+	 * .formLogin( formLoginSpec ->
+	 * formLoginSpec.loginPage("/login").authenticationManager(entry ->
+	 * Mono.empty())) .build(); }
+	 */
+
 	@Bean
 	public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
 		return http.csrf(csrf -> csrf.disable()).cors(cors -> cors.configurationSource(corsConfigurationSource()))
-				.authorizeExchange(auth -> auth
-						.matchers(ServerWebExchangeMatchers.pathMatchers("/home", "/register/**", "/authenticate/**",
-								"/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html"))
+				.authorizeExchange(exchanges -> exchanges
+						.pathMatchers("/authenticate/**", "home/login", "/home/register", "home/authenticate",
+								"/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html")
 						.permitAll().pathMatchers("/user/**", "/pet/**").hasRole("USER")
 						.pathMatchers("/admin/**", "/user/**", "/pet/**").hasRole("ADMIN").anyExchange()
 						.authenticated())
-				.addFilterAt(jwtAuthenticationFilter, SecurityWebFiltersOrder.AUTHENTICATION)
-				.formLogin(
-						formLoginSpec -> formLoginSpec.loginPage("/login").authenticationManager(entry -> Mono.empty()))
-				.build();
+				.exceptionHandling(exceptionHandlingSpec -> exceptionHandlingSpec
+						.authenticationEntryPoint((exchange, ex) -> Mono.fromRunnable(() -> {
+							exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+						})).accessDeniedHandler((exchange, denied) -> Mono.fromRunnable(() -> {
+							exchange.getResponse().setStatusCode(HttpStatus.FORBIDDEN);
+						})))
+				.addFilterAt(jwtAuthenticationFilter, SecurityWebFiltersOrder.AUTHENTICATION).build();
 	}
-	*/
 
-	 @Bean
-	    public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
-	        return http
-	            .csrf(csrf -> csrf.disable())
-	            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-	            .authorizeExchange(exchanges -> exchanges
-	                .pathMatchers("/authenticate/**", "home/login", "/home/register", "home/authenticate", "swagger/**").permitAll()
-	                .pathMatchers("/user/**", "/pet/**", "/user/create").hasRole("USER")
-	                .pathMatchers("/admin/**", "/user/**", "/pet/**").hasRole("ADMIN")
-	                .anyExchange().authenticated()
-	            )
-	            .exceptionHandling(exceptionHandlingSpec -> exceptionHandlingSpec
-	                .authenticationEntryPoint((exchange, ex) -> Mono.fromRunnable(() -> {
-	                    exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
-	                }))
-	                .accessDeniedHandler((exchange, denied) -> Mono.fromRunnable(() -> {
-	                    exchange.getResponse().setStatusCode(HttpStatus.FORBIDDEN);
-	                }))
-	            )
-	            .build();
-	    }
-
-	    @Bean
-	    public CorsConfigurationSource corsConfigurationSource() {
-	        CorsConfiguration config = new CorsConfiguration();
-	        config.addAllowedOrigin("http://localhost:3000"); // Permite solicitudes desde el frontend
-	        config.addAllowedMethod("*");                     // Permite todos los métodos HTTP
-	        config.addAllowedHeader("*");                     // Permite todas las cabeceras
-	        config.setAllowCredentials(true);                 // Permite cookies y autenticación
-
-	        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-	        source.registerCorsConfiguration("/**", config);
-	        return source;
-	    }
-
-	
-	/*
 	@Bean
-	public CorsWebFilter corsWebFilter() {
+	public CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration config = new CorsConfiguration();
-		config.addAllowedOrigin("http://localhost:3000");
-		config.setAllowCredentials(true);
-		config.addAllowedMethod("GET");
-		config.addAllowedMethod("POST");
-		config.addAllowedMethod("PUT");
-		config.addAllowedMethod("DELETE");
-		config.addAllowedHeader("*");
+		config.addAllowedOrigin("http://localhost:3000"); // Permite solicitudes desde el frontend
+		config.addAllowedMethod("*"); // Permite todos los métodos HTTP
+		config.addAllowedHeader("*"); // Permite todas las cabeceras
+		config.setAllowCredentials(true); // Permite cookies y autenticación
 
 		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 		source.registerCorsConfiguration("/**", config);
-		return new CorsWebFilter(source);
+		return source;
 	}
-	*/
+
+	/*
+	 * @Bean public CorsWebFilter corsWebFilter() { CorsConfiguration config = new
+	 * CorsConfiguration(); config.addAllowedOrigin("http://localhost:3000");
+	 * config.setAllowCredentials(true); config.addAllowedMethod("GET");
+	 * config.addAllowedMethod("POST"); config.addAllowedMethod("PUT");
+	 * config.addAllowedMethod("DELETE"); config.addAllowedHeader("*");
+	 * 
+	 * UrlBasedCorsConfigurationSource source = new
+	 * UrlBasedCorsConfigurationSource(); source.registerCorsConfiguration("/**",
+	 * config); return new CorsWebFilter(source); }
+	 */
 
 	@Bean
 	public ReactiveUserDetailsService userDetailsService() {
