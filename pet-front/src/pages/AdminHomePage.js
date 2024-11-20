@@ -76,12 +76,12 @@ const AdminHomePage = () => {
 };
 
 const logoutContainerStyle = {
-  display: 'flex',
+  display: 'inline-block',
   justifyContent: 'flex-end',
   padding: '10px 20px',
   position: 'absolute',
   top: 10,
-  right: 0,
+  right: -1820,
   width: '100%',
   boxSizing: 'border-box',
   zIndex: 10000,

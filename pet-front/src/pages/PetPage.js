@@ -12,6 +12,8 @@ const PetPage = () => {
 
   // Feedback message for action results
   const [actionFeedback, setActionFeedback] = useState('');
+  const [accessoryImage, setAccessoryImage] = useState(''); // New state for accessory image
+
 
   const fetchPet = useCallback(async () => {
     setLoading(true);
@@ -77,8 +79,15 @@ const PetPage = () => {
     }
   };
 
-
-  const getPetTypeImage = (type) => `/images/animal/${type?.toLowerCase()}.webp`;
+  const displayAccessory = () => {
+    if (pet?.specialTraits?.length) {
+      const randomAccessory = pet.specialTraits[Math.floor(Math.random() * pet.specialTraits.length)];
+      setAccessoryImage(`/images/accessories/${randomAccessory.toLowerCase()}.webp`);
+    } else {
+      setAccessoryImage(''); // Clear accessory image if no traits exist
+      setActionFeedback('No accessories available for this pet.');
+    }
+  };
 
   const actions = [
     'feed',
@@ -90,8 +99,9 @@ const PetPage = () => {
     'clean',
     'adventure',
     'check',
-    'special',
   ];
+
+  const getPetImage = (color, mood, petType) => `/images//animal/${petType?.toLowerCase()}/${color?.toLowerCase()}/${mood?.toLowerCase()}.webp`;
 
   return (
     <div className="background-container" style={{ backgroundImage: `url(${backgroundImage})` }}>
@@ -122,10 +132,26 @@ const PetPage = () => {
             {/* Pet Image */}
             <div style={petImageContainerStyle}>
               <img
-                src={getPetTypeImage(pet.petType)}
-                alt={`${pet.petType}`}
+                src={getPetImage(pet.petColor, pet.currentMood, pet.petType)}
+                alt={`${pet.petColor} ${pet.mood} ${pet.petType} pet`}
                 style={petTypeImageStyle}
+                onError={(e) => {
+                  // Fallback if image is not found
+                  e.target.src = `/images/animal/${pet.petType?.toLowerCase()}.webp`;
+                }}
               />
+              {/* Accessory Image */}
+              {accessoryImage && (
+                <img
+                  src={accessoryImage}
+                  alt="Pet Accessory"
+                  style={accessoryImageStyle}
+                  onError={(e) => {
+                    // Fallback for missing accessory images
+                    e.target.src = '/images/accessories/default.webp';
+                  }}
+                />
+              )}
             </div>
 
             {/* Pet Details */}
@@ -139,6 +165,7 @@ const PetPage = () => {
               <p><strong>Hygiene:</strong> {pet.hygiene}</p>
               <p><strong>Health:</strong> {pet.health}</p>
               <p><strong>Environment:</strong> {pet.environment}</p>
+              <p><strong>Mood:</strong> {pet.mood}</p>
 
               {/* Action Buttons */}
               <div style={{ marginTop: '20px' }}>
@@ -158,6 +185,16 @@ const PetPage = () => {
         {!loading && !error && !pet && (
           <p>Pet not found. Please go back to the dashboard.</p>
         )}
+      </div>
+
+      {/* Navigation Buttons */}
+      <div style={navigationButtonsContainerStyle}>
+        <Link to="/user/home">
+          <button style={navigationButtonStyle}>Return to user home</button>
+        </Link>
+        <Link to="/user/read">
+          <button style={navigationButtonStyle}>Return to pet list</button>
+        </Link>
       </div>
 
       {/* Background Animation CSS */}
@@ -184,6 +221,12 @@ const PetPage = () => {
 };
 
 // Styles
+const accessoryImageStyle = {
+  width: '100px',
+  height: '100px',
+  marginTop: '10px',
+};
+
 const logoutContainerStyle = {
     display: 'inline-block',
     justifyContent: 'flex-end',
@@ -254,6 +297,24 @@ const buttonStyle = {
   transition: 'background-color 0.3s',
   marginTop: '10px',
   marginRight: '10px',
+};
+
+const navigationButtonsContainerStyle = {
+  display: 'flex',
+  justifyContent: 'center',
+  marginTop: '20px',
+  gap: '20px',
+};
+
+const navigationButtonStyle = {
+  padding: '10px 20px',
+  fontSize: '16px',
+  color: '#fff',
+  backgroundColor: '#3D3D3D',
+  border: 'none',
+  borderRadius: '5px',
+  cursor: 'pointer',
+  transition: 'background-color 0.3s',
 };
 
 export default PetPage;

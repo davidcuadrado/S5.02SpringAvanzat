@@ -34,8 +34,29 @@ const DashboardPage = () => {
     fetchPets();
   }, []);
 
-  const getEnvironmentImage = (environment) => `/images/environment/${environment}.webp`; // Background for the card
-  const getPetTypeImage = (type) => `/images/animal/${type.toLowerCase()}.webp`; // PetType image
+  const getEnvironmentImage = (environment) => `/images/environment/${environment}.webp`;
+  const getPetTypeImage = (type) => `/images/animal/${type.toLowerCase()}.webp`;
+
+  const deletePet = async (petId) => {
+    try {
+      const response = await axios.delete(
+        `${process.env.REACT_APP_API_URL}/user/${petId}/delete`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        }
+      );
+      if (response.status === 204) {
+        setPets(pets.filter((pet) => pet.petId !== petId)); // Update the pet list
+        alert(`Pet ${petId} deleted successfully.`);
+      }
+    } catch (err) {
+      alert(
+        err.response?.data || 'An error occurred while trying to delete the pet. Please try again.'
+      );
+    }
+  };
 
   return (
     <div
@@ -64,7 +85,7 @@ const DashboardPage = () => {
           maxWidth: '600px',
           width: '100%',
           margin: 'auto',
-          overflow: 'auto', // Allows scrolling if content exceeds height
+          overflow: 'auto',
         }}
       >
         <h1 style={{ color: '#333', marginBottom: '20px' }}>Your Pets</h1>
@@ -84,7 +105,7 @@ const DashboardPage = () => {
                       backgroundSize: 'cover',
                       backgroundPosition: 'center',
                       color: '#fff',
-                      textShadow: '0 2px 4px rgba(0, 0, 0, 0.8)', // Makes text more readable on images
+                      textShadow: '0 2px 4px rgba(0, 0, 0, 0.8)',
                     }}
                   >
                     <img
@@ -96,6 +117,12 @@ const DashboardPage = () => {
                     <p>Type: {pet.petType}</p>
                   </div>
                 </Link>
+                <button
+                  onClick={() => deletePet(pet.petId)}
+                  style={deleteButtonStyle}
+                >
+                  Delete
+                </button>
               </li>
             ))}
           </ul>
@@ -160,8 +187,6 @@ const petTypeImageStyle = {
   marginBottom: '10px',
 };
 
-
-
 const buttonStyle = {
   padding: '10px 20px',
   fontSize: '16px',
@@ -173,6 +198,18 @@ const buttonStyle = {
   transition: 'background-color 0.3s',
   width: '100%',
   marginTop: '10px',
+};
+
+const deleteButtonStyle = {
+  marginTop: '10px',
+  padding: '8px 16px',
+  fontSize: '14px',
+  color: '#fff',
+  backgroundColor: '#e74c3c',
+  border: 'none',
+  borderRadius: '5px',
+  cursor: 'pointer',
+  transition: 'background-color 0.3s',
 };
 
 export default DashboardPage;

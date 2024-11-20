@@ -64,17 +64,6 @@ const AddPetPage = () => {
     }
   };
 
-  // Handle adding a new treat
-  const handleAddTreat = () => {
-    setSpecialTreats([...specialTreats, '']);
-  };
-
-  // Handle updating a treat
-  const handleTreatChange = (index, value) => {
-    const treats = [...specialTreats];
-    treats[index] = value;
-    setSpecialTreats(treats);
-  };
 
   return (
     <div
@@ -170,25 +159,7 @@ const AddPetPage = () => {
               <option value="OCEAN">Ocean</option>
             </select>
           </div>
-          <div style={{ marginBottom: '20px' }}>
-            <label style={labelStyle}>Special Treats:</label>
-            {specialTreats.map((treat, index) => (
-              <input
-                key={index}
-                value={treat}
-                onChange={(e) => handleTreatChange(index, e.target.value)}
-                placeholder="Add a treat"
-                style={{ ...inputStyle, marginTop: '5px' }}
-              />
-            ))}
-            <button
-              type="button"
-              onClick={handleAddTreat}
-              style={{ ...buttonStyle, marginTop: '10px' }}
-            >
-              Add Treat
-            </button>
-          </div>
+          
           <button type="submit" style={buttonStyle}>
             Add Pet
           </button>
@@ -200,6 +171,18 @@ const AddPetPage = () => {
 };
 
 // Styles
+const logoutContainerStyle = {
+  display: 'inline-block',
+  justifyContent: 'flex-end',
+  padding: '10px 20px',
+  position: 'absolute',
+  top: 10,
+  right: -1820,
+  width: '100%',
+  boxSizing: 'border-box',
+  zIndex: 10000,
+};
+
 const buttonStyle = {
   padding: '10px 20px',
   fontSize: '16px',
