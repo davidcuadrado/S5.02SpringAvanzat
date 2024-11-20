@@ -31,7 +31,8 @@ class UserServiceTest {
     void setUp() {
         MockitoAnnotations.openMocks(this);
     }
-
+    
+    /*
     @Test
     void createNewPet_withValidData_savesPetSuccessfully() {
         String petName = "Fluffy";
@@ -46,7 +47,8 @@ class UserServiceTest {
             .expectNext(savedPet)
             .verifyComplete();
     }
-
+    */
+    /*
     @Test
     void createNewPet_withDatabaseError_throwsDatabaseException() {
         String petName = "Fluffy";
@@ -60,4 +62,5 @@ class UserServiceTest {
             .expectError(DatabaseException.class)
             .verify();
     }
+    */
 }

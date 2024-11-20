@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.security.Keys;
@@ -27,16 +28,16 @@ public class JwtService {
 	private static final long VALIDITY = TimeUnit.MINUTES.toMillis(30);
 
 	public Mono<String> generateToken(Mono<UserDetails> userDetailsMono) {
-		return userDetailsMono.flatMap(userDetails -> {
-			return Mono.fromCallable(() -> {
-				Map<String, Object> claims = new HashMap<>();
-				claims.put("iss", "ITAcademyS05T02");
+		return userDetailsMono.flatMap(userDetails -> Mono.fromCallable(() -> {
+			Map<String, Object> claims = new HashMap<>();
+			claims.put("iss", "ITAcademyS05T02");
+			claims.put("userId", userDetails.getUsername());
+			claims.put("roles",
+					userDetails.getAuthorities().stream().map(authority -> authority.getAuthority()).toList());
 
-				return Jwts.builder().claims(claims).subject(userDetails.getUsername())
-						.issuedAt(Date.from(Instant.now())).expiration(Date.from(Instant.now().plusMillis(VALIDITY)))
-						.signWith(generateKey()).compact();
-			});
-		});
+			return Jwts.builder().claims(claims).subject(userDetails.getUsername()).issuedAt(Date.from(Instant.now()))
+					.expiration(Date.from(Instant.now().plusMillis(VALIDITY))).signWith(generateKey()).compact();
+		}));
 	}
 
 	public Mono<String> validateAndExtractUsername(String token) {
@@ -55,20 +56,27 @@ public class JwtService {
 	}
 
 	public Mono<String> extractUsername(String token) {
+		return Mono.fromCallable(() -> {
+			try {
+				return getClaims(token).getSubject();
+			} catch (SignatureException e) {
+				throw new IllegalArgumentException("Invalid JWT token signature", e);
+			}
+		});
+	}
+
+	public Mono<String> extractUserId(String token) {
+	    String cleanToken = token.startsWith("Bearer ") ? token.substring(7) : token;
+	    System.out.println("Extracting userId from token: " + cleanToken);
+
 	    return Mono.fromCallable(() -> {
-	        try {
-	            return getClaims(token).getSubject();
-	        } catch (SignatureException e) {
-	            throw new IllegalArgumentException("Invalid JWT token signature", e);
-	        }
+	        Claims claims = getClaims(cleanToken);
+	        String userId = claims.get("userId", String.class);
+	        System.out.println("Extracted userId: " + userId);
+	        return userId;
 	    });
 	}
 
-
-	public Mono<String> extractUserId(String jwt) {
-		return Mono.fromCallable(() -> getClaims(jwt).get("userId", String.class))
-				.flatMap(userId -> userId != null ? Mono.just(userId) : Mono.empty());
-	}
 
 	private Claims getClaims(String jwt) {
 		return Jwts.parser().verifyWith(generateKey()).build().parseSignedClaims(jwt).getPayload();
@@ -80,9 +88,9 @@ public class JwtService {
 				Claims claims = getClaims(jwt);
 				Date expiration = claims.getExpiration();
 				return expiration != null && expiration.after(Date.from(Instant.now()));
-			} catch (MalformedJwtException | IllegalArgumentException e) {
+			} catch (ExpiredJwtException e) {
 				return false;
-			} catch(ExpiredJwtException e) {
+			} catch (JwtException | IllegalArgumentException e) {
 				return false;
 			}
 		});

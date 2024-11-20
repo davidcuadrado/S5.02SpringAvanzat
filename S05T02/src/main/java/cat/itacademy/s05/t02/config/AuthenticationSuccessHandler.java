@@ -10,28 +10,29 @@ import org.springframework.security.web.server.authentication.ServerAuthenticati
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
-
+/*
 @Component
 public class AuthenticationSuccessHandler implements ServerAuthenticationSuccessHandler {
 
-    @Override
-    public Mono<Void> onAuthenticationSuccess(WebFilterExchange webFilterExchange, Authentication authentication) {
-        ServerWebExchange exchange = webFilterExchange.getExchange();
+	@Override
+	public Mono<Void> onAuthenticationSuccess(WebFilterExchange webFilterExchange, Authentication authentication) {
+	    ServerWebExchange exchange = webFilterExchange.getExchange();
 
-        return Mono.defer(() -> {
-            boolean isAdmin = authentication.getAuthorities().stream()
-                    .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ROLE_ADMIN"));
+	    // Exclude /home/login from redirection
+	    if (exchange.getRequest().getPath().toString().equals("/home/login")) {
+	        return exchange.getResponse().setComplete();
+	    }
 
-            String redirectUrl = isAdmin ? "/admin/home" : "/user/home";
-            setRedirectResponse(exchange, redirectUrl); // Extracted method
+	    return Mono.defer(() -> {
+	        boolean isAdmin = authentication.getAuthorities().stream()
+	            .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ROLE_ADMIN"));
 
-            return exchange.getResponse().setComplete();
-        });
-    }
+	        String redirectUrl = isAdmin ? "/admin/home" : "/user/home";
+	        setRedirectResponse(exchange, redirectUrl);
 
-    protected void setRedirectResponse(ServerWebExchange exchange, String redirectUrl) {
-        exchange.getResponse().setStatusCode(HttpStatus.FOUND);
-        exchange.getResponse().getHeaders().setLocation(URI.create(redirectUrl));
-    }
+	        return exchange.getResponse().setComplete();
+	    });
+	}
+
 }
-
+*/

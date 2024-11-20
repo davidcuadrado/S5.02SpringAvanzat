@@ -8,6 +8,8 @@ import cat.itacademy.s05.t02.exceptions.DatabaseException;
 import cat.itacademy.s05.t02.exceptions.NotFoundException;
 import cat.itacademy.s05.t02.exceptions.PetActionException;
 import cat.itacademy.s05.t02.models.Pet;
+import cat.itacademy.s05.t02.models.PetAccessory;
+import cat.itacademy.s05.t02.models.PetEnvironment;
 import cat.itacademy.s05.t02.models.PetMood;
 import cat.itacademy.s05.t02.repositories.PetRepository;
 import reactor.core.publisher.Flux;
@@ -21,20 +23,13 @@ public class PetService {
 
 	private static final Random random = new Random();
 
-	public Mono<Pet> createNewPet(Mono<String> petName, Mono<String> monoUserId) {
-		return Mono.zip(petName, monoUserId).flatMap(tuple -> {
-			String name = tuple.getT1();
+	public Mono<Pet> createNewPet(Mono<Pet> petMono, Mono<String> userIdMono) {
+		return Mono.zip(petMono, userIdMono).flatMap(tuple -> {
+			Pet pet = tuple.getT1();
 			String userId = tuple.getT2();
-
-			Pet newPet = new Pet(name, userId);
-
-			return petRepository.save(newPet);
-		}).onErrorMap(e -> new DatabaseException("Error creating new pet."));
-	}
-
-	public Mono<Pet> createNewPet(Mono<Pet> monoPet) {
-		return monoPet.flatMap(pet -> petRepository.save(pet))
-				.onErrorMap(e -> new DatabaseException("Error creating new pet"));
+			pet.setUserId(userId);
+			return petRepository.save(pet);
+		});
 	}
 
 	public Mono<Pet> findPetById(Mono<String> monoPetId) {
@@ -76,13 +71,13 @@ public class PetService {
 				return playWithPet(monoPetId);
 
 			case "environment":
-				return changeEnvironment(monoPetId, Mono.just("requested environment"));
+				return changeEnvironment(monoPetId);
 
 			case "cheer":
 				return cheerPet(monoPetId);
 
 			case "accessory":
-				return addAccessory(monoPetId, Mono.just("requested accessory"));
+				return addAccessory(monoPetId);
 
 			case "sleep":
 				return putPetToSleep(monoPetId);
@@ -95,9 +90,6 @@ public class PetService {
 
 			case "check":
 				return checkAndRestoreHealth(monoPetId);
-
-			case "special":
-				return giveSpecialTreat(monoPetId, Mono.just("request special treat"));
 
 			default:
 				return Mono.error(
@@ -140,19 +132,27 @@ public class PetService {
 		}).switchIfEmpty(Mono.error(new NotFoundException("Pet not found"))));
 	}
 
-	public Mono<Pet> changeEnvironment(Mono<String> petId, Mono<String> environment) {
-		return petId.flatMap(id -> petRepository.findById(id).flatMap(pet -> environment.map(env -> {
-			pet.setEnvironment(env);
+	public Mono<Pet> changeEnvironment(Mono<String> petId) {
+		return petId.flatMap(id -> petRepository.findById(id).flatMap(pet -> {
+			PetEnvironment randomEnvironment = getRandomEnvironment();
+			pet.setEnvironment(randomEnvironment);
+
 			pet.setHappiness(pet.getHappiness() + 5);
 			pet.setEnergy(Math.max(pet.getEnergy() - 5, 0));
 
-			if (random.nextDouble() < 0.15) {
+			if (new Random().nextDouble() < 0.15) {
 				pet.setHappiness(Math.max(pet.getHappiness() - 20, 0));
 				pet.setEnergy(Math.max(pet.getEnergy() - 10, 0));
 			}
 
-			return pet;
-		})).flatMap(petRepository::save)).switchIfEmpty(Mono.error(new NotFoundException("Pet not found")));
+			return petRepository.save(pet);
+		})).switchIfEmpty(Mono.error(new NotFoundException("Pet not found")));
+	}
+
+	private PetEnvironment getRandomEnvironment() {
+		PetEnvironment[] environments = PetEnvironment.values();
+		int randomIndex = new Random().nextInt(environments.length);
+		return environments[randomIndex];
 	}
 
 	public Mono<Pet> cheerPet(Mono<String> petId) {
@@ -161,7 +161,7 @@ public class PetService {
 			pet.setHappiness(pet.getHappiness() + 10);
 			pet.setEnergy(Math.max(pet.getEnergy() - 5, 0));
 
-			if (random.nextDouble() < 0.05) {
+			if (random.nextDouble() < 0.1) {
 				pet.setCurrentMood(PetMood.ANXIOUS);
 				pet.setHappiness(Math.max(pet.getHappiness() - 15, 0));
 			}
@@ -170,25 +170,35 @@ public class PetService {
 		}).switchIfEmpty(Mono.error(new NotFoundException("Pet not found")));
 	}
 
-	public Mono<Pet> addAccessory(Mono<String> petId, Mono<String> accessory) {
-		return petId.flatMap(id -> petRepository.findById(id).flatMap(pet -> accessory.map(acc -> {
-			pet.getSpecialTreats().add(acc);
+	public Mono<Pet> addAccessory(Mono<String> petId) {
+		return petId.flatMap(id -> petRepository.findById(id).flatMap(pet -> {
+			PetAccessory randomAccessory = getRandomAccessory();
+			pet.getSpecialTreats().add(randomAccessory.toString());
+
 			pet.setHappiness(pet.getHappiness() + 5);
 			pet.setHygiene(Math.max(pet.getHygiene() - 5, 0));
 
-			if (random.nextDouble() < 0.1) {
+			if (new Random().nextDouble() < 0.1) {
 				pet.setHappiness(Math.max(pet.getHappiness() - 10, 0));
 			}
 
-			return pet;
-		})).flatMap(petRepository::save)).switchIfEmpty(Mono.error(new NotFoundException("Pet not found")));
+			return petRepository.save(pet);
+		})).switchIfEmpty(Mono.error(new NotFoundException("Pet not found")));
 	}
 
+	private PetAccessory getRandomAccessory() {
+		PetAccessory[] accessories = PetAccessory.values();
+		int randomIndex = new Random().nextInt(accessories.length);
+		return accessories[randomIndex];
+	}
+
+	
 	public Mono<Pet> putPetToSleep(Mono<String> petId) {
 		return petId.flatMap(id -> petRepository.findById(id).flatMap(pet -> {
 			pet.setEnergy(Math.min(pet.getEnergy() + 50, 100));
 			pet.setHappiness(pet.getHappiness() + 5);
 			pet.setHunger(Math.min(pet.getHunger() + 10, 100));
+			pet.setCurrentMood(PetMood.SLEEP);
 
 			if (random.nextDouble() < 0.05) {
 				pet.setHappiness(Math.max(pet.getHappiness() - 15, 0));
@@ -204,6 +214,7 @@ public class PetService {
 			pet.setHygiene(Math.min(pet.getHygiene() + 30, 100));
 			pet.setHappiness(pet.getHappiness() + 5);
 			pet.setEnergy(Math.max(pet.getEnergy() - 5, 0));
+			pet.setCurrentMood(PetMood.CALM);
 
 			if (random.nextDouble() < 0.1) {
 				pet.setHappiness(Math.max(pet.getHappiness() - 10, 0));
@@ -245,22 +256,6 @@ public class PetService {
 			}
 			return petRepository.save(pet);
 		})).switchIfEmpty(Mono.error(new NotFoundException("Pet not found")));
-	}
-
-	public Mono<Pet> giveSpecialTreat(Mono<String> petId, Mono<String> treat) {
-		return petId.flatMap(id -> petRepository.findById(id).flatMap(pet -> treat.map(t -> {
-			pet.getSpecialTreats().add(t);
-			pet.setHappiness(pet.getHappiness() + 10);
-			pet.setEnergy(Math.min(pet.getEnergy() + 10, 100));
-			pet.setHygiene(Math.max(pet.getHygiene() - 5, 0));
-
-			if (random.nextDouble() < 0.1) {
-				pet.setHappiness(Math.max(pet.getHappiness() - 15, 0));
-				pet.setHealth(Math.max(pet.getHealth() - 20, 0));
-			}
-
-			return pet;
-		})).flatMap(petRepository::save)).switchIfEmpty(Mono.error(new NotFoundException("Pet not found")));
 	}
 
 }

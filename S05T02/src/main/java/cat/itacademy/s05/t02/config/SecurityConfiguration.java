@@ -1,8 +1,11 @@
 package cat.itacademy.s05.t02.config;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.authentication.UserDetailsRepositoryReactiveAuthenticationManager;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
@@ -13,6 +16,10 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatchers;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.reactive.CorsConfigurationSource;
+import org.springframework.web.cors.reactive.CorsWebFilter;
+import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
 
 import cat.itacademy.s05.t02.services.MyUserDetailService;
 import reactor.core.publisher.Mono;
@@ -29,16 +36,46 @@ public class SecurityConfiguration {
 
 	@Bean
 	public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
-		return http.csrf(csrf -> csrf.disable())
-				.authorizeExchange(auth -> auth
-						.matchers(ServerWebExchangeMatchers.pathMatchers("/home", "/register/**", "/authenticate/**"))
-						.permitAll().pathMatchers("/user/**", "/pet/**").hasRole("USER").pathMatchers("/admin/**", "/user/**", "/pet/**").hasRole("ADMIN")
-						.anyExchange().authenticated())
-				.addFilterAt(jwtAuthenticationFilter, SecurityWebFiltersOrder.AUTHENTICATION)
-				.formLogin(
-						formLoginSpec -> formLoginSpec.loginPage("/login").authenticationManager(entry -> Mono.empty()))
-				.build();
+		return http.csrf(csrf -> csrf.disable()).cors(cors -> cors.configurationSource(corsConfigurationSource()))
+				.authorizeExchange(exchanges -> exchanges
+						.pathMatchers("/authenticate/**", "home/login", "/home/register", "home/authenticate", "/register/**",
+								"/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html")
+						.permitAll().pathMatchers("/user/**", "/pet/**").hasRole("USER")
+						.pathMatchers("/admin/**", "/user/**", "/pet/**").hasRole("ADMIN").anyExchange()
+						.authenticated())
+				.exceptionHandling(exceptionHandlingSpec -> exceptionHandlingSpec
+						.authenticationEntryPoint((exchange, ex) -> Mono.fromRunnable(() -> {
+							exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+						})).accessDeniedHandler((exchange, denied) -> Mono.fromRunnable(() -> {
+							exchange.getResponse().setStatusCode(HttpStatus.FORBIDDEN);
+						})))
+				.addFilterAt(jwtAuthenticationFilter, SecurityWebFiltersOrder.AUTHENTICATION).build();
 	}
+
+	@Bean
+	public CorsConfigurationSource corsConfigurationSource() {
+		CorsConfiguration config = new CorsConfiguration();
+		config.addAllowedOrigin("http://localhost:3000");
+		config.addAllowedMethod("*");
+		config.addAllowedHeader("*");
+		config.setAllowCredentials(true);
+
+		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+		source.registerCorsConfiguration("/**", config);
+		return source;
+	}
+
+	/*
+	 * @Bean public CorsWebFilter corsWebFilter() { CorsConfiguration config = new
+	 * CorsConfiguration(); config.addAllowedOrigin("http://localhost:3000");
+	 * config.setAllowCredentials(true); config.addAllowedMethod("GET");
+	 * config.addAllowedMethod("POST"); config.addAllowedMethod("PUT");
+	 * config.addAllowedMethod("DELETE"); config.addAllowedHeader("*");
+	 * 
+	 * UrlBasedCorsConfigurationSource source = new
+	 * UrlBasedCorsConfigurationSource(); source.registerCorsConfiguration("/**",
+	 * config); return new CorsWebFilter(source); }
+	 */
 
 	@Bean
 	public ReactiveUserDetailsService userDetailsService() {

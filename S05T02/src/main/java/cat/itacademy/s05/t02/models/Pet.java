@@ -22,19 +22,22 @@ public class Pet {
 	private int hunger;
 	private int hygiene;
 	private int health;
-	private String color;
+	private PetColor petColor;
 	private ArrayList<String> specialTreats;
-	private String environment;
+	private PetEnvironment environment;
 
-	public Pet(String name, String userId) {
+	public Pet(String name, String userId, PetType petType, PetColor petColor, PetEnvironment environment) {
 		this.name = name;
 		this.userId = userId;
+		this.petType = petType;
+		this.petColor = petColor;
+		this.environment = environment;
 	}
 
 	public String getPetId() {
 		return this.id;
 	}
-	
+
 	public void setPetId(String setId) {
 		this.id = setId;
 	}
@@ -42,7 +45,7 @@ public class Pet {
 	public String getUserId() {
 		return this.userId;
 	}
-	
+
 	public void setUserId(String userId) {
 		this.userId = userId;
 	}
@@ -50,7 +53,7 @@ public class Pet {
 	public void setName(String petName) {
 		this.name = petName;
 	}
-	
+
 	public String getName() {
 		return name;
 	}
@@ -95,14 +98,7 @@ public class Pet {
 		this.hunger = hunger;
 	}
 
-	public String getColor() {
-		return color;
-	}
-
-	public void setColor(String color) {
-		this.color = color;
-	}
-
+	
 	public ArrayList<String> getSpecialTreats() {
 		return specialTreats;
 	}
@@ -110,16 +106,16 @@ public class Pet {
 	public void setSpecialTreats(ArrayList<String> specialTreats) {
 		this.specialTreats = specialTreats;
 	}
-	
+
 	public void addSpecialTreats(String specialTreat) {
 		this.specialTreats.add(specialTreat);
 	}
 
-	public String getEnvironment() {
+	public PetEnvironment getEnvironment() {
 		return environment;
 	}
 
-	public void setEnvironment(String environment) {
+	public void setEnvironment(PetEnvironment environment) {
 		this.environment = environment;
 	}
 
@@ -138,9 +134,13 @@ public class Pet {
 	public void setHealth(int health) {
 		this.health = health;
 	}
-	
-	
 
-	
+	public PetColor getPetColor() {
+		return petColor;
+	}
+
+	public void setPetColor(PetColor petColor) {
+		this.petColor = petColor;
+	}
 
 }

@@ -46,14 +46,19 @@ public class UserController {
 
 	@Operation(summary = "Create new pet", description = "Create a new user's pet ")
 	@PostMapping("/create")
-	public Mono<ResponseEntity<Pet>> createNewPet(@RequestHeader("Authorization") String authHeader,
-			@RequestBody String newPetName) {
-		String jwt = authHeader.replace("Bearer ", "");
-		return jwtService.extractUserId(jwt)
-				.flatMap(userId -> userService.createNewPet(Mono.just(newPetName), Mono.just(userId)))
-				.map(createdPet -> ResponseEntity.status(HttpStatus.CREATED).body(createdPet))
-				.onErrorResume(e -> Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null)));
+	public Mono<ResponseEntity<Pet>> createPet(@RequestBody Pet pet, @RequestHeader("Authorization") String token) {
+	    return jwtService.extractUserId(token)
+	        .flatMap(userId -> {
+	            System.out.println("Extracted userId: " + userId);
+	            return userService.createNewPet(Mono.just(pet), Mono.just(userId))
+	                .map(savedPet -> ResponseEntity.status(HttpStatus.CREATED).body(savedPet));
+	        })
+	        .onErrorResume(e -> {
+	            System.err.println("Error creating pet: " + e.getMessage());
+	            return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).build());
+	        });
 	}
+
 
 	@Operation(summary = "Get all user's pets", description = "Retrieve all existing pets from the user. ")
 	@GetMapping("/read")
@@ -69,14 +74,15 @@ public class UserController {
 				});
 	}
 
+	
 	@Operation(summary = "Get a pet from a user", description = "Retrieve an specific pet from a user. ")
 	@GetMapping("/{id}")
 	public Mono<ResponseEntity<Pet>> getUserSpecificPet(@RequestHeader("Authorization") String authHeader,
 			@PathVariable("id") String petId) {
-
+		
 		String jwt = authHeader.replace("Bearer ", "");
 		return jwtService.extractUserId(jwt)
-				.flatMap(userId -> petService.getPetByUserIdAndPetId(Mono.just(userId), Mono.just(petId)))
+				.flatMap(userId -> petService.findPetById(Mono.just(petId)))
 				.map(pet -> ResponseEntity.ok(pet)).defaultIfEmpty(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
 	}
 

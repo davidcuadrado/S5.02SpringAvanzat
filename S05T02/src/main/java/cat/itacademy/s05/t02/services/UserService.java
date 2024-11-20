@@ -14,15 +14,20 @@ public class UserService {
 	@Autowired
 	private PetRepository petRepository;
 
-	public Mono<Pet> createNewPet(Mono<String> petName, Mono<String> monoUserId) {
-		return Mono.zip(petName, monoUserId).flatMap(tuple -> {
-			String name = tuple.getT1();
+	public Mono<Pet> createNewPet(Mono<Pet> petMono, Mono<String> userIdMono) {
+		return Mono.zip(petMono, userIdMono).flatMap(tuple -> {
+			Pet pet = tuple.getT1();
 			String userId = tuple.getT2();
-
-			Pet newPet = new Pet(name, userId);
-
-			return petRepository.save(newPet);
-		}).onErrorMap(e -> new DatabaseException("Error creating new pet."));
+			pet.setUserId(userId);
+			
+			 if (pet.getHappiness() == 0) pet.setHappiness(100);
+	            if (pet.getEnergy() == 0) pet.setEnergy(100);
+	            if (pet.getHunger() == 0) pet.setHunger(50);
+	            if (pet.getHygiene() == 0) pet.setHygiene(100);
+	            if (pet.getHealth() == 0) pet.setHealth(100);
+	            
+			return petRepository.save(pet);
+		});
 	}
 
 }
