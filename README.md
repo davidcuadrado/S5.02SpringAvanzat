@@ -54,7 +54,7 @@ BackEnd Setup
 
     Clone the repository:
 
-git clone https://github.com/your-repository.git
+[git clone https://github.com/your-repository.git](https://github.com/davidcuadrado/S5.02SpringAvanzat).git
 cd S05T02
 
 Run the project with Maven:
