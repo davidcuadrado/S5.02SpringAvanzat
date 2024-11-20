@@ -43,21 +43,19 @@ public class AdminController {
 	public Mono<ResponseEntity<String>> handleAdminWelcome() {
 		return Mono.just(ResponseEntity.ok("Welcome back, you are now logged in!"));
 	}
-	
+
 	@PreAuthorize("hasRole('ADMIN')")
 	@Operation(summary = "Create new pet", description = "Create a new user's pet ")
 	@PostMapping("/create")
 	public Mono<ResponseEntity<Pet>> createPet(@RequestBody Pet pet, @RequestHeader("Authorization") String token) {
-	    return jwtService.extractUserId(token)
-	        .flatMap(userId -> {
-	            System.out.println("Extracted userId: " + userId);
-	            return userService.createNewPet(Mono.just(pet), Mono.just(userId))
-	                .map(savedPet -> ResponseEntity.status(HttpStatus.CREATED).body(savedPet));
-	        })
-	        .onErrorResume(e -> {
-	            System.err.println("Error creating pet: " + e.getMessage());
-	            return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).build());
-	        });
+		return jwtService.extractUserId(token).flatMap(userId -> {
+			System.out.println("Extracted userId: " + userId);
+			return userService.createNewPet(Mono.just(pet), Mono.just(userId))
+					.map(savedPet -> ResponseEntity.status(HttpStatus.CREATED).body(savedPet));
+		}).onErrorResume(e -> {
+			System.err.println("Error creating pet: " + e.getMessage());
+			return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).build());
+		});
 	}
 
 	@PreAuthorize("hasRole('ADMIN')")
@@ -80,34 +78,32 @@ public class AdminController {
 	@GetMapping("/{id}")
 	public Mono<ResponseEntity<Pet>> getUserSpecificPet(@RequestHeader("Authorization") String authHeader,
 			@PathVariable("id") String petId) {
-		
+
 		String jwt = authHeader.replace("Bearer ", "");
-		return jwtService.extractUserId(jwt)
-				.flatMap(userId -> petService.findPetById(Mono.just(petId)))
+		return jwtService.extractUserId(jwt).flatMap(userId -> petService.findPetById(Mono.just(petId)))
 				.map(pet -> ResponseEntity.ok(pet)).defaultIfEmpty(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
 	}
-	
+
 	@PreAuthorize("hasRole('ADMIN')")
 	@Operation(summary = "Delete a pet", description = "Delete an existing pet introducing its pet ID. ")
-	@DeleteMapping("/{id}/delete")
+	@DeleteMapping("pets/{id}/delete")
 	public Mono<ResponseEntity<String>> deletePet(@RequestHeader("Authorization") String authHeader,
-			@PathVariable("id") String petId) {
-		String jwt = authHeader.replace("Bearer ", "");
-		return jwtService.extractUserId(jwt).flatMap(userId -> petService.findPetById(Mono.just(petId)).flatMap(pet -> {
-			if (pet.getUserId().equals(userId)) {
-				return petService.deletePetById(Mono.just(petId)).then(Mono.just(
-						ResponseEntity.status(HttpStatus.NO_CONTENT).body("Pet " + petId + " deleted successfully. ")));
-			} else {
-				return Mono.just(ResponseEntity.status(HttpStatus.FORBIDDEN)
-						.body("You are not authorized to delete this pet. "));
-			}
-		}).switchIfEmpty(Mono.error(new NotFoundException("Pet with ID: " + petId + " not found"))))
-				.onErrorResume(NotFoundException.class,
-						e -> Mono.just(ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage())))
-				.onErrorResume(e -> Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-						.body("An unexpected error occurred when trying to delete the pet. Please try again.")));
+	                                              @PathVariable("id") String petId) {
+	    String jwt = authHeader.replace("Bearer ", "");
+	    return jwtService.extractUserId(jwt)
+	            .flatMap(userId -> petService.findPetById(Mono.just(petId))
+	                    .flatMap(pet -> 
+	                        petService.deletePetById(Mono.just(petId))
+	                                .then(Mono.just(ResponseEntity
+	                                        .status(HttpStatus.NO_CONTENT)
+	                                        .body("Pet " + petId + " deleted successfully."))))
+	                    .switchIfEmpty(Mono.error(new NotFoundException("Pet with ID: " + petId + " not found"))))
+	            .onErrorResume(NotFoundException.class,
+	                    e -> Mono.just(ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage())))
+	            .onErrorResume(e -> Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                    .body("An unexpected error occurred when trying to delete the pet. Please try again.")));
 	}
-	
+
 	@PreAuthorize("hasRole('ADMIN')")
 	@Operation(summary = "Interact with a pet", description = "Interact with a pet using an specific action. ")
 	@PostMapping("/{id}/update")
@@ -128,12 +124,12 @@ public class AdminController {
 						.body("You are not authorized to interact with this pet.")));
 
 	}
-	
+
 	@PreAuthorize("hasRole('ADMIN')")
 	@Operation(summary = "Get all pets", description = "Retrieve all existing pets.")
 	@GetMapping("/pets")
 	public Flux<Pet> getAllPets() {
-	    return petService.getAllPets();
+		return petService.getAllPets();
 	}
 
 }
