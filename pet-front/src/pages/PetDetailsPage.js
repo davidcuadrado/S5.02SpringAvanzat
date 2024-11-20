@@ -9,12 +9,10 @@ const PetDetailsPage = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Set a random background image
     const randomImageNumber = Math.floor(Math.random() * 16) + 1;
     const imagePath = `/images/resource/${randomImageNumber}.webp`;
     setBackgroundImage(imagePath);
 
-    // Fetch all pets for admin
     const fetchPets = async () => {
       try {
         const response = await axios.get(`${process.env.REACT_APP_API_URL}/admin/pets`, {
@@ -33,6 +31,24 @@ const PetDetailsPage = () => {
     fetchPets();
   }, []);
 
+  const deletePet = async (petId) => {
+    try {
+      const response = await axios.delete(`${process.env.REACT_APP_API_URL}/admin/pets/${petId}/delete`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+
+      if (response.status === 204) {
+        setPets((prevPets) => prevPets.filter((pet) => pet.petId !== petId));
+      } else {
+        setError(response.data || 'Failed to delete pet. Please try again later.');
+      }
+    } catch (err) {
+      setError('Failed to delete pet. Please try again later.');
+    }
+  };
+
   const getEnvironmentImage = (environment) => `/images/environment/${environment}.webp`;
   const getPetTypeImage = (type) => `/images/animal/${type.toLowerCase()}.webp`;
 
@@ -47,12 +63,10 @@ const PetDetailsPage = () => {
         flexDirection: 'column',
       }}
     >
-      {/* Top-right logout button */}
       <div style={logoutContainerStyle}>
         <LogoutButton />
       </div>
 
-      {/* Centered content */}
       <div
         style={{
           backgroundColor: 'rgba(255, 255, 255, 0.9)',
@@ -67,7 +81,6 @@ const PetDetailsPage = () => {
       >
         <h1 style={{ color: '#333', marginBottom: '20px', textAlign: 'center' }}>All Pets</h1>
 
-        {/* Display loading, error, or pets */}
         {loading && <p>Loading pets...</p>}
         {error && <p style={{ color: 'red' }}>{error}</p>}
         {!loading && !error && pets.length > 0 && (
@@ -90,6 +103,16 @@ const PetDetailsPage = () => {
                 <p>Type: {pet.petType}</p>
                 <p>Environment: {pet.environment}</p>
                 <p>User ID: {pet.userId}</p>
+                <button
+                  style={deleteButtonStyle}
+                  onClick={() => {
+                    if (window.confirm(`Are you sure you want to delete ${pet.name}?`)) {
+                      deletePet(pet.petId);
+                    }
+                  }}
+                >
+                  Delete Pet
+                </button>
               </div>
             ))}
           </div>
@@ -102,7 +125,6 @@ const PetDetailsPage = () => {
   );
 };
 
-// Styles
 const logoutContainerStyle = {
   display: 'inline-block',
   justifyContent: 'flex-end',
@@ -117,7 +139,7 @@ const logoutContainerStyle = {
 
 const petsGridStyle = {
   display: 'grid',
-  gridTemplateColumns: 'repeat(6, 1fr)', // Updated to 6 columns
+  gridTemplateColumns: 'repeat(6, 1fr)',
   gap: '20px',
 };
 
@@ -141,6 +163,16 @@ const petCardBackground = {
 const petTypeImageStyle = {
   width: '50px',
   height: '50px',
+};
+
+const deleteButtonStyle = {
+  backgroundColor: '#ff4d4f',
+  color: '#fff',
+  border: 'none',
+  borderRadius: '5px',
+  padding: '10px 15px',
+  cursor: 'pointer',
+  marginTop: '10px',
 };
 
 export default PetDetailsPage;
